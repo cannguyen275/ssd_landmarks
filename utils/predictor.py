@@ -83,15 +83,8 @@ class Predictor:
         picked_box_probs[:, 1] *= height
         picked_box_probs[:, 2] *= width
         picked_box_probs[:, 3] *= height
-        picked_landmarks_probs[:, 0] *= width
-        picked_landmarks_probs[:, 1] *= height
-        picked_landmarks_probs[:, 2] *= width
-        picked_landmarks_probs[:, 3] *= height
-        picked_landmarks_probs[:, 4] *= width
-        picked_landmarks_probs[:, 5] *= height
-        picked_landmarks_probs[:, 6] *= width
-        picked_landmarks_probs[:, 7] *= height
-        picked_landmarks_probs[:, 8] *= width
-        picked_landmarks_probs[:, 9] *= height
+        picked_landmarks_probs[:, 0:10:2] *= width
+        picked_landmarks_probs[:, 1:10:2] *= height
+     
         
         return picked_box_probs[:, :4],picked_landmarks_probs[:, :10], torch.tensor(picked_labels), picked_box_probs[:, 4]
