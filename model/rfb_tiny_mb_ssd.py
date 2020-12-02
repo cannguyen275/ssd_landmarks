@@ -45,9 +45,16 @@ def create_rfb_tiny_mb_ssd(num_classes, is_test=False, device="cuda"):
         SeperableConv2d(in_channels=base_net.base_channel * 16, out_channels=6 * num_classes, kernel_size=3, padding=1),
         Conv2d(in_channels=base_net.base_channel * 16, out_channels=9 * num_classes, kernel_size=3, padding=1)
     ])
+    
+    landmark_headers = ModuleList([
+        SeperableConv2d(in_channels=base_net.base_channel * 4, out_channels=9 * 10, kernel_size=3, padding=1),
+        SeperableConv2d(in_channels=base_net.base_channel * 8, out_channels=6 * 10, kernel_size=3, padding=1),
+        SeperableConv2d(in_channels=base_net.base_channel * 16, out_channels=6 * 10, kernel_size=3, padding=1),
+        Conv2d(in_channels=base_net.base_channel * 16, out_channels=9 * 10, kernel_size=3, padding=1)
+    ])
 
     return SSD(num_classes, base_net_model, source_layer_indexes,
-               extras, classification_headers, regression_headers, is_test=is_test, config=config, device=device)
+               extras, classification_headers, regression_headers, landmark_headers, is_test=is_test, config=config, device=device)
 
 
 def create_rfb_tiny_mb_ssd_predictor(net, candidate_size=200, nms_method=None, sigma=0.5, device=None):

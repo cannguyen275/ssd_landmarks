@@ -79,7 +79,7 @@ class FaceDataset(data.Dataset):
         landms = target[:, 4:14]
         # TODO write landms to target_transforms
         if self.target_transform:
-            boxes, labels = self.target_transform(boxes, labels)
+            boxes,landms, labels = self.target_transform(boxes,landms,labels)
         return torch.from_numpy(img), target
 
     @staticmethod
