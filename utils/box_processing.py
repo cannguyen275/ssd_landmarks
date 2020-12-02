@@ -96,6 +96,22 @@ def convert_locations_to_boxes(locations, priors, center_variance,
         boxes:  priors: [[center_x, center_y, h, w]]. All the values
             are relative to the image size.
     """
+    """
+        The following is decode for landmark face 
+        boxes = torch.cat((
+        priors[:, :2] + loc[:, :2] * variances[0] * priors[:, 2:],
+        priors[:, 2:] * torch.exp(loc[:, 2:] * variances[1])), 1)
+        boxes[:, :2] -= boxes[:, 2:] / 2
+        boxes[:, 2:] += boxes[:, :2]
+        return boxes
+        
+        torch.cat([
+        locations[..., :2] * center_variance * priors[..., 2:] + priors[..., :2],
+        torch.exp(locations[..., 2:] * size_variance) * priors[..., 2:]
+    ], dim=locations.dim() - 1)
+
+        
+    """
     # priors can have one dimension less.
     if priors.dim() + 1 == locations.dim():
         priors = priors.unsqueeze(0)
@@ -104,9 +120,45 @@ def convert_locations_to_boxes(locations, priors, center_variance,
         torch.exp(locations[..., 2:] * size_variance) * priors[..., 2:]
     ], dim=locations.dim() - 1)
 
+def encode_landm(matched,  priors, center_variance,
+                               size_variance):
+    """Encode the variances from the priorbox layers into the ground truth boxes
+    we have matched (based on jaccard overlap) with the prior boxes.
+    Args:
+        matched: (tensor) Coords of ground truth for each prior in point-form
+            Shape: [num_priors, 10].
+        priors: (tensor) Prior boxes in center-offset form
+            Shape: [num_priors,4].
+        variances: (list[float]) Variances of priorboxes
+    Return:
+        encoded landm (tensor), Shape: [num_priors, 10]
+    """
+    variances = [center_variance,size_variance]
+    # dist b/t match center and prior's center
+    matched = torch.reshape(matched, (matched.size(0), 5, 2))
+    priors_cx = priors[:, 0].unsqueeze(1).expand(matched.size(0), 5).unsqueeze(2)
+    priors_cy = priors[:, 1].unsqueeze(1).expand(matched.size(0), 5).unsqueeze(2)
+    priors_w = priors[:, 2].unsqueeze(1).expand(matched.size(0), 5).unsqueeze(2)
+    priors_h = priors[:, 3].unsqueeze(1).expand(matched.size(0), 5).unsqueeze(2)
+    priors = torch.cat([priors_cx, priors_cy, priors_w, priors_h], dim=2)
+    g_cxcy = matched[:, :, :2] - priors[:, :, :2]
+    # encode variance
+    g_cxcy /= (variances[0] * priors[:, :, 2:])
+    # g_cxcy /= priors[:, :, 2:]
+    g_cxcy = g_cxcy.reshape(g_cxcy.size(0), -1)
+    # return target for smooth_l1_loss
+    return g_cxcy
 
 def convert_boxes_to_locations(center_form_boxes, center_form_priors, center_variance, size_variance):
     # priors can have one dimension less
+    # g_cxcy = center_form_boxes[..., :2] - center_form_priors[..., :2]) / center_form_priors[..., 2:] / center_variance
+    # g_cxcy = ((matched[:, :2] + matched[:, 2:])/2 - priors[:, :2])/ variances[0] / priors[:, 2:]
+    '''
+     return torch.cat([
+        (boxes[..., :2] + boxes[..., 2:]) / 2,
+         boxes[..., 2:] - boxes[..., :2]
+    ], boxes.dim() - 1)
+    '''
     if center_form_priors.dim() + 1 == center_form_boxes.dim():
         center_form_priors = center_form_priors.unsqueeze(0)
     return torch.cat([
@@ -115,6 +167,34 @@ def convert_boxes_to_locations(center_form_boxes, center_form_priors, center_var
     ], dim=center_form_boxes.dim() - 1)
 
 
+
+def decode_landm(landmarks, priors, center_variance,
+                               size_variance):
+    """Decode landm from predictions using priors to undo
+    the encoding we did for offset regression at train time.
+    Args:
+        pre (tensor): landm predictions for loc layers,
+            Shape: [num_priors,10]
+        priors (tensor): Prior boxes in center-offset form.
+            Shape: [num_priors,4].
+        variances: (list[float]) Variances of priorboxes
+    Return:
+        decoded landm predictions
+        priors[..., :2] = priors[:, :2]
+        loc[:, :2]  = locations[..., :2]  
+        variances[0] = center_variance
+        priors[:, 2:] = priors[..., 2:]
+    """
+    if priors.dim() + 1 == landmarks.dim():
+        priors = priors.unsqueeze(0)
+    #landmarks = landmarks.squeeze(0)
+    landms = torch.cat((priors[..., :2] + landmarks[..., :2] * center_variance * priors[..., 2:],
+                        priors[..., :2] + landmarks[..., 2:4] * center_variance * priors[..., 2:],
+                        priors[..., :2] + landmarks[..., 4:6] * center_variance * priors[..., 2:],
+                        priors[..., :2] + landmarks[..., 6:8] * center_variance * priors[..., 2:],
+                        priors[..., :2] + landmarks[..., 8:10] * center_variance * priors[..., 2:],
+                        ), dim=1)
+    return landms
 def area_of(left_top, right_bottom) -> torch.Tensor:
     """Compute the areas of rectangles given two corners.
 
@@ -148,15 +228,17 @@ def iou_of(boxes0, boxes1, eps=1e-5):
     return overlap_area / (area0 + area1 - overlap_area + eps)
 
 
-def assign_priors(gt_boxes, gt_labels, corner_form_priors,
+def assign_priors(gt_boxes, gt_labels,gt_landmarks, corner_form_priors,
                   iou_threshold):
     """Assign ground truth boxes and targets to priors.
 
     Args:
         gt_boxes (num_targets, 4): ground truth boxes.
         gt_labels (num_targets): labels of targets.
+        gt_landmarks(num_targets,10): ground truth landmarks
         priors (num_priors, 4): corner form priors
     Returns:
+        labels(num_priors,10): real values for
         boxes (num_priors, 4): real values for priors.
         labels (num_priros): labels for priors.
     """
@@ -175,7 +257,8 @@ def assign_priors(gt_boxes, gt_labels, corner_form_priors,
     labels = gt_labels[best_target_per_prior_index]
     labels[best_target_per_prior < iou_threshold] = 0  # the backgournd id
     boxes = gt_boxes[best_target_per_prior_index]
-    return boxes, labels
+    landmarks = gt_landmarks[best_target_per_prior_index]
+    return boxes, labels,landmarks
 
 
 def hard_negative_mining(loss, labels, neg_pos_ratio):
@@ -215,7 +298,7 @@ def corner_form_to_center_form(boxes):
     ], boxes.dim() - 1)
 
 
-def hard_nms(box_scores, iou_threshold, top_k=-1, candidate_size=200):
+def hard_nms(box_scores,landmark_scores, iou_threshold, top_k=-1, candidate_size=200):
     """
 
     Args:
@@ -245,15 +328,15 @@ def hard_nms(box_scores, iou_threshold, top_k=-1, candidate_size=200):
         )
         indexes = indexes[iou <= iou_threshold]
 
-    return box_scores[picked, :]
+    return box_scores[picked, :],landmark_scores[picked, :]
 
 
-def nms(box_scores, nms_method=None, score_threshold=None, iou_threshold=None,
+def nms(box_scores,landmark_scores, nms_method=None, score_threshold=None, iou_threshold=None,
         sigma=0.5, top_k=-1, candidate_size=200):
     if nms_method == "soft":
         return soft_nms(box_scores, score_threshold, sigma, top_k)
     else:
-        return hard_nms(box_scores, iou_threshold, top_k, candidate_size=candidate_size)
+        return hard_nms(box_scores,landmark_scores, iou_threshold, top_k, candidate_size=candidate_size)
 
 
 def soft_nms(box_scores, score_threshold, sigma=0.5, top_k=-1):

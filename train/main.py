@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append('/media/ducanh/DATA/tienln/ai_camera/ai_camera_detector/')
+sys.path.append('/home/quannm/ssd_landmarks/')
 from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 import os
@@ -8,8 +8,8 @@ import logging
 import sys
 import itertools
 import torch
-from torchscope import scope
-from torchsummary import summary
+#from torchscope import scope
+#from torchsummary import summary
 from utils.loss import MultiboxLoss, FocalLoss
 from utils.argument import _argument
 from train import train, test, data_loader, create_network
