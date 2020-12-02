@@ -6,6 +6,7 @@ import cv2
 import os
 import json
 
+
 class _DataLoader:
 
     def __init__(self, root, transform=None, target_transform=None):
@@ -18,21 +19,21 @@ class _DataLoader:
         self.ids = []
         self.class_names = ('BACKGROUND', 'person')
         self.class_dict = {class_name: i for i, class_name in enumerate(self.class_names)}
-        
+
         self._annopath = os.path.join('%s', 'json_annotations', '%s.json')
 
         for file in os.listdir(self.anno_path):
-            with open(os.path.join(self.anno_path,file), 'r') as f:
+            with open(os.path.join(self.anno_path, file), 'r') as f:
                 data = json.load(f)
             objects = data["objects"]
             for sub_object in data["objects"]:
-                if sub_object["label"]=="person":
+                if sub_object["label"] == "person":
                     self.ids.append(file.split(".json")[0])
-                    break     
+                    break
 
     def __getitem__(self, index):
         image_id = self.ids[index]
-        boxes, labels= self._get_annotation(image_id)
+        boxes, labels = self._get_annotation(image_id)
         image = self._read_image(image_id)
         if self.transform:
             image, boxes, labels = self.transform(image, boxes, labels)
@@ -45,7 +46,7 @@ class _DataLoader:
         return len(self.ids)
 
     def _get_annotation(self, image_id):
-        annotation_file = os.path.join(self.anno_path,image_id+".json")
+        annotation_file = os.path.join(self.anno_path, image_id + ".json")
         # print(annotation_file)
         with open(annotation_file, 'r') as f:
             data = json.load(f)
@@ -53,7 +54,7 @@ class _DataLoader:
         boxes = []
         labels = []
         for sub_object in objects:
-            class_name = sub_object["label"]           
+            class_name = sub_object["label"]
             if class_name in self.class_dict:
                 bbox = sub_object["bbox"]
                 x1 = float(bbox["x_topleft"])
@@ -67,12 +68,12 @@ class _DataLoader:
                 np.array(labels, dtype=np.int64))
 
     def _read_image(self, image_id):
-        if os.path.isfile(os.path.join(self.img_path,image_id+".jpg")):
-            image_file = os.path.join(self.img_path,image_id+".jpg")
-        elif os.path.isfile(os.path.join(self.img_path,image_id+".jpeg")):
-            image_file = os.path.join(self.img_path,image_id+".jpeg")
-        else :
-            image_file = os.path.join(self.img_path,image_id+".png")
+        if os.path.isfile(os.path.join(self.img_path, image_id + ".jpg")):
+            image_file = os.path.join(self.img_path, image_id + ".jpg")
+        elif os.path.isfile(os.path.join(self.img_path, image_id + ".jpeg")):
+            image_file = os.path.join(self.img_path, image_id + ".jpeg")
+        else:
+            image_file = os.path.join(self.img_path, image_id + ".png")
         image = cv2.imread(str(image_file))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return image

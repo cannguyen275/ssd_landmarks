@@ -4,6 +4,7 @@ import torch
 import numpy as np
 from utils import box_processing as box_utils
 
+
 class MultiboxLoss(nn.Module):
     def __init__(self, priors, iou_threshold, neg_pos_ratio,
                  center_variance, size_variance, device):
@@ -42,9 +43,11 @@ class MultiboxLoss(nn.Module):
         gt_locations = gt_locations[pos_mask, :].reshape(-1, 4)
         smooth_l1_loss = F.smooth_l1_loss(predicted_locations, gt_locations, size_average=False)
         num_pos = gt_locations.size(0)
-        return smooth_l1_loss/num_pos, classification_loss/num_pos
+        return smooth_l1_loss / num_pos, classification_loss / num_pos
+
+
 class FocalLoss(nn.Module):
-    def __init__(self, gamma = 2, alpha = 0.25):
+    def __init__(self, gamma=2, alpha=0.25):
         """
             focusing is parameter that can adjust the rate at which easy
             examples are down-weighted.
@@ -87,27 +90,28 @@ class FocalLoss(nn.Module):
         conf_loss = -self.alpha * ((1 - p_t)**self.gamma * p_t_log)
         conf_loss = conf_loss.sum()
         """
-    
+
         # focal loss implementation(2)
-        pos_cls = conf_targets >-1
+        pos_cls = conf_targets > -1
         mask = pos_cls.unsqueeze(2).expand_as(conf_preds)
         conf_p = conf_preds[mask].view(-1, conf_preds.size(2)).clone()
         p_t_log = -F.cross_entropy(conf_p, conf_targets[pos_cls], reduction='sum')
         p_t = torch.exp(p_t_log)
 
         # This is focal loss presented in the paper eq(5)
-        conf_loss = -self.alpha * ((1 - p_t)**self.gamma * p_t_log)
+        conf_loss = -self.alpha * ((1 - p_t) ** self.gamma * p_t_log)
 
         ############# Localization Loss part ##############
-        pos = conf_targets > 0 # ignore background
+        pos = conf_targets > 0  # ignore background
         pos_idx = pos.unsqueeze(pos.dim()).expand_as(loc_preds)
         loc_p = loc_preds[pos_idx].view(-1, 4)
         loc_t = loc_targets[pos_idx].view(-1, 4)
         loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
 
-        num_pos = pos.long().sum(1, keepdim = True)
-        N = max(num_pos.data.sum(), 1) # to avoid divide by 0. It is caused by data augmentation when crop the images. The cropping can distort the boxes 
-        conf_loss /= N # exclude number of background?
+        num_pos = pos.long().sum(1, keepdim=True)
+        N = max(num_pos.data.sum(),
+                1)  # to avoid divide by 0. It is caused by data augmentation when crop the images. The cropping can distort the boxes
+        conf_loss /= N  # exclude number of background?
         loc_loss /= N
 
         return loc_loss, conf_loss
