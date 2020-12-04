@@ -75,10 +75,9 @@ class FaceDataset(data.Dataset):
         truths = target[:, :4]
         labels = target[:, -1]
         landms = target[:, 4:14]
-        # TODO write landms to target_transforms
-        # if self.target_transform:
-        #     boxes,landms, labels = self.target_transform(boxes,landms,labels)
-        return torch.from_numpy(img), target
+        if self.target_transform:
+            boxes, landms, labels = self.target_transform(truths, landms, labels)
+        return torch.from_numpy(img), boxes, landms, labels
 
     @staticmethod
     def read_file(root_path, file_name):
@@ -194,8 +193,9 @@ class ImgAugTransform:
 if __name__ == "__main__":
     from datasets.data_augment import preproc
 
-    loader = FaceDataset(root_path=os.path.join('/home/can/AI_Camera/EfficientFaceNet/data/widerface/train/images'), file_name='label.txt',
-                                preproc=preproc(300, (127, 127, 127)))
+    loader = FaceDataset(root_path=os.path.join('/home/can/AI_Camera/EfficientFaceNet/data/widerface/train/images'),
+                         file_name='label.txt',
+                         preproc=preproc(300, (127, 127, 127)))
     print(len(loader))
     for i in range(0, len(loader)):
         print("\n****")
