@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append('/home/quannm/ssd_landmarks')
+sys.path.append('/home/quannm/github/ssd_landmarks')
 from model.mb_ssd_lite_f19 import create_mb_ssd_lite_f19, create_mb_ssd_lite_f19_predictor
 from model.mb_ssd_lite_f38 import create_mb_ssd_lite_f38, create_mb_ssd_lite_f38_predictor
 from model.mb_ssd_lite_f38_person import create_mb_ssd_lite_f38_person, create_mb_ssd_lite_f38_person_predictor
@@ -16,9 +16,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector predictor With Pytorch')
 parser.add_argument("--net_type", default="rfb_tiny_mb2_ssd", type=str,help='mb2-ssd-lite_f19, mb2-ssd-lite_f38, rfb_tiny_mb2_ssd')
-parser.add_argument('--model_path', default = '',
+parser.add_argument('--model_path', default = '/home/quannm/github/ssd_landmarks/app/person/rfb_tiny_mb2_ssd_c64/rfb_tiny_mb2_ssd_c64_146_142_19.pth',
                      help='model weight')
-parser.add_argument('--label_path', default = '/home/quannm/ssd_landmarks/utils/labels/head.txt', help='class names lable')
+parser.add_argument('--label_path', default = '/home/quannm/github/ssd_landmarks/utils/labels/person.txt', help='class names lable')
 parser.add_argument('--result_path', default = 'detect_results', help='result path to save')
 parser.add_argument('--test_path', default = "/home/quannm/ssd_landmarks/testdata", help='path of folder test')
 parser.add_argument('--test_device', default="cpu", type=str,help='cuda:0 or cpu')
