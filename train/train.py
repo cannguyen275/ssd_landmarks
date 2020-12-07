@@ -72,6 +72,7 @@ def test(loader, net, criterion, device):
     running_loss = 0.0
     running_regression_loss = 0.0
     running_classification_loss = 0.0
+    running_landmark_loss = 0.0
     num = 0
     for _, data in enumerate(loader):
         images, boxes, labels = data
