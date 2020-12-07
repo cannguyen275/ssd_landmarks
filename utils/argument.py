@@ -2,9 +2,11 @@ import argparse
 from utils.misc import str2bool
 import logging
 import sys
+
+
 def _argument():
     parser = argparse.ArgumentParser(
-                        description='Single Shot MultiBox Detector Training With Pytorch')
+        description='Single Shot MultiBox Detector Training With Pytorch')
 
     parser.add_argument("--dataset_type", default="voc", type=str,
                         help='Specify dataset type. Currently support voc and open_images.')
@@ -37,7 +39,6 @@ def _argument():
                         help='initial learning rate for base net.')
     parser.add_argument('--extra_layers_lr', default=None, type=float,
                         help='initial learning rate for the layers not in base net and prediction heads.')
-
 
     # Params for loading pretrained basenet or checkpoints.
     parser.add_argument('--base_net',
@@ -72,9 +73,10 @@ def _argument():
     parser.add_argument('--use_cuda', default=True, type=str2bool,
                         help='Use CUDA to train model')
     parser.add_argument('--valid', default=True, type=bool,
-                        help='valid when training')                   
+                        help='valid when training')
 
-    parser.add_argument('--checkpoint_folder', default='/media/ducanh/DATA/tienln/ai_camera/ai_camera_detector/weight/training',
+    parser.add_argument('--checkpoint_folder',
+                        default='/media/ducanh/DATA/tienln/ai_camera/ai_camera_detector/weight/training',
                         help='Directory for saving checkpoint models')
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO,

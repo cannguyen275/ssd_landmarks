@@ -1,28 +1,27 @@
+import parser
 import sys
-
-sys.path.append('/home/quannm/ssd_landmarks/')
-from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
-from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 import os
 import logging
 import sys
 import itertools
 import torch
-#from torchscope import scope
-#from torchsummary import summary
+# from torchscope import scope
+# from torchsummary import summary
 from utils.loss import MultiboxLoss, FocalLoss
 from utils.argument import _argument
-from train import train, test, data_loader, create_network
+from train.train import train, test, data_loader, create_network
 from model.mb_ssd_lite_f38 import create_mb_ssd_lite_f38
 from model.config import mb_ssd_lite_f38_config
-
 from model.mb_ssd_lite_f38_person import create_mb_ssd_lite_f38_person
 from model.config import mb_ssd_lite_f38_person_config
-
 from model.mb_ssd_lite_f19 import create_mb_ssd_lite_f19
 from model.config import mb_ssd_lite_f19_config
 from model.rfb_tiny_mb_ssd import create_rfb_tiny_mb_ssd
 from model.config import rfb_tiny_mb_ssd_config
+from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
+from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
+
+sys.path.append('/home/quannm/ssd_landmarks/')
 
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
@@ -61,10 +60,10 @@ class Train():
             parser.print_help(sys.stderr)
             sys.exit(1)
 
-        train_loader, val_loader, num_classes = data_loader(config)
-        net, criterion, optimizer, scheduler = create_network(create_net, num_classes, self.device)
+        train_loader = data_loader(config)
+        net, criterion, optimizer, scheduler = create_network(create_net, self.device)
 
-        return net, criterion, optimizer, scheduler, train_loader, val_loader
+        return net, criterion, optimizer, scheduler, train_loader, None
 
     def training(self):
         print(self.dir_path)
@@ -91,4 +90,4 @@ class Train():
 
 
 if __name__ == '__main__':
-    train = Train().training()
+    Train().training()

@@ -1,7 +1,6 @@
-
-from utils.argument import _argument
 import logging
 import sys
+import os
 import itertools
 from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
@@ -10,15 +9,17 @@ from module.ssd import MatchPrior
 from datasets.data_preprocessing import TrainAugmentation, TestTransform
 from torch.utils.data import DataLoader, ConcatDataset
 from utils.loss import MultiboxLoss, FocalLoss
-#from torchsummary import summary
 import torch
-#from torchscope import scope
-import sys
-sys.path.append('/home/quannm/ssd_landmarks/')
+from datasets.data_augment import preproc
+from datasets.wider_face import FaceDataset
 from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
+from utils.argument import _argument
+
+sys.path.append('/home/quannm/ssd_landmarks/')
 timer = Timer()
 
 args = _argument()
+
 
 def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
     net.train(True)
@@ -60,6 +61,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
 
     return training_loss
 
+
 def test(loader, net, criterion, device):
     net.eval()
     running_loss = 0.0
@@ -82,51 +84,57 @@ def test(loader, net, criterion, device):
         running_classification_loss += classification_loss.item()
     return running_loss / num, running_regression_loss / num, running_classification_loss / num
 
+
 def data_loader(config):
     train_transform = TrainAugmentation(config.image_size, config.image_mean, config.image_std)
-    target_transform = MatchPrior(config.priors, config.center_variance,config.size_variance, config.iou_threshold)
+    target_transform = MatchPrior(config.priors, config.center_variance, config.size_variance, config.iou_threshold)
     test_transform = TestTransform(config.image_size, config.image_mean, config.image_std)
 
     logging.info("Prepare training datasets.")
-    Data_Train = []
-    Data_Valid = []
-    datasets = []
+    # Data_Train = []
+    # Data_Valid = []
+    # datasets = []
+    #
+    # path_dataset = open("/home/quannm/ssd_landmarks/datasets/train_dataset.txt", "r")
+    # for line in path_dataset:
+    #     data = line.split('+')
+    #     Data_Train.append([data[0], data[1][:-1]])
+    #
+    # # training datasets
+    # # dataset_paths = [Data_Train[0],Data_Train[1],Data_Train[2],Data_Train[3],Data_Train[4],Data_Train[5]]
+    # dataset_paths = [Data_Train[0], Data_Train[1]]
+    # for dataset_path in dataset_paths:
+    #     print(dataset_path)
+    #     dataset = _DataLoader(dataset_path, transform=train_transform, target_transform=target_transform)
+    #     print(len(dataset.ids))
+    #     datasets.append(dataset)
+    #     num_classes = len(dataset.class_names)
+    # train_dataset = ConcatDataset(datasets)
 
-    path_dataset = open("/home/quannm/ssd_landmarks/datasets/train_dataset.txt", "r")
-    for line in path_dataset:
-        data = line.split('+')
-        Data_Train.append([data[0],data[1][:-1]])
-    
-    # training datasets
-    # dataset_paths = [Data_Train[0],Data_Train[1],Data_Train[2],Data_Train[3],Data_Train[4],Data_Train[5]]
-    dataset_paths = [Data_Train[0],Data_Train[1]]
-    for dataset_path in dataset_paths:
-        print(dataset_path)
-        dataset = _DataLoader(dataset_path, transform=train_transform,target_transform=target_transform)
-        print(len(dataset.ids))
-        datasets.append(dataset)
-        num_classes = len(dataset.class_names)
-    train_dataset = ConcatDataset(datasets)
-    logging.info("Train dataset size: {}".format(len(train_dataset)))
-    train_loader = DataLoader(train_dataset, args.batch_size,num_workers=args.num_workers,shuffle=True)
-
+    loader = FaceDataset(root_path=os.path.join('/home/can/AI_Camera/EfficientFaceNet/data/widerface/train/images'),
+                         file_name='label_remake.txt',
+                         preproc=preproc(300, (127, 127, 127)))
+    logging.info("Train dataset size: {}".format(len(loader)))
+    train_loader = DataLoader(loader, args.batch_size, num_workers=args.num_workers, shuffle=True)
     if args.valid:
+        # TODO: add validation dataset
         # Validation datasets
         path_dataset = open("/home/quannm/ssd_landmarks/datasets/valid_dataset.txt", "r")
         for line in path_dataset:
             data = line.split('+')
-            Data_Valid.append([data[0],data[1][:-1]])
+            Data_Valid.append([data[0], data[1][:-1]])
         # print(Data_Valid)
         logging.info("Prepare Validation datasets.")
         valid_dataset_paths = [Data_Valid[0]]
         for dataset_path in valid_dataset_paths:
-            val_dataset = _DataLoader(dataset_path, transform=test_transform,target_transform=target_transform)
-        val_loader = DataLoader(val_dataset, args.batch_size,num_workers=args.num_workers,shuffle=True)
+            val_dataset = _DataLoader(dataset_path, transform=test_transform, target_transform=target_transform)
+        val_loader = DataLoader(val_dataset, args.batch_size, num_workers=args.num_workers, shuffle=True)
         return train_loader, val_loader, num_classes
     else:
-        return train_loader, num_classes
+        return train_loader
 
-def create_network(create_net,num_classes, DEVICE ):
+
+def create_network(create_net, DEVICE, num_classes=2):
     logging.info("Build network.")
     net = create_net(num_classes)
     # print(net)
@@ -195,7 +203,7 @@ def create_network(create_net,num_classes, DEVICE ):
         logging.info("Uses MultiStepLR scheduler.")
         milestones = [int(v.strip()) for v in args.milestones.split(",")]
         scheduler = MultiStepLR(optimizer, milestones=milestones,
-                                                     gamma=0.1, last_epoch=last_epoch)
+                                gamma=0.1, last_epoch=last_epoch)
     elif args.scheduler == 'cosine':
         logging.info("Uses CosineAnnealingLR scheduler.")
         scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)
@@ -203,5 +211,5 @@ def create_network(create_net,num_classes, DEVICE ):
         logging.fatal(f"Unsupported Scheduler: {args.scheduler}.")
         parser.print_help(sys.stderr)
         sys.exit(1)
-    
+
     return net, criterion, optimizer, scheduler
