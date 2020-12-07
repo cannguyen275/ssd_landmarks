@@ -118,7 +118,7 @@ class FocalLoss(nn.Module):
         loc_loss /= N
         land_loss /= N1
 
-        return loc_loss, conf_loss
+        return loc_loss, conf_loss, land_loss
 
     def one_hot(self, x, n):
         y = torch.eye(n)
