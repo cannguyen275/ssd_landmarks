@@ -60,39 +60,45 @@ class FocalLoss(nn.Module):
         self.gamma = gamma
         self.alpha = alpha
 
-    def forward(self, conf_preds, loc_preds, conf_targets, loc_targets):
+    def forward(self, conf_preds, loc_preds, land_preds, conf_targets, loc_targets, land_targets,):
         """
             Args:
                 predictions (tuple): (conf_preds, loc_preds)
                     conf_preds shape: [batch, n_anchors, num_cls]
                     loc_preds shape: [batch, n_anchors, 4]
+                    land_preds shape: [batch, n_anchors, 10]
                 targets (tensor): (conf_targets, loc_targets)
                     conf_targets shape: [batch, n_anchors]
                     loc_targets shape: [batch, n_anchors, 4]
+                    land_targets shape: [batch, n_anchors, 10]
         """
-
-        ############### Confiden Loss part ###############
-        """
-        #focal loss implementation(1)
-        pos_cls = conf_targets > -1 # exclude ignored anchors
-        mask = pos_cls.unsqueeze(2).expand_as(conf_preds)
-        conf_p = conf_preds[mask].view(-1, conf_preds.size(2)).clone()
-        conf_t = conf_targets[pos_cls].view(-1).clone()
-        p = F.softmax(conf_p, 1)
-        p = p.clamp(1e-7, 1. - 1e-7) # to avoid loss going to inf
-        c_mask = conf_p.data.new(conf_p.size(0), conf_p.size(1)).fill_(0)
-        c_mask = Variable(c_mask)
-        ids = conf_t.view(-1, 1)
-        c_mask.scatter_(1, ids, 1.)
-        p_t = (p*c_mask).sum(1).view(-1, 1)
-        p_t_log = p_t.log()
-        # This is focal loss presented in ther paper eq(5)
-        conf_loss = -self.alpha * ((1 - p_t)**self.gamma * p_t_log)
-        conf_loss = conf_loss.sum()
-        """
-
+        
+        # landm Loss (Smooth L1)
+        # Shape: [batch,num_priors,10]
+        ############# Landmark Loss part ##############
+        zeros = torch.tensor(0).cuda()
+        pos_land = conf_targets > zeros  # ignore background and images without landmark 
+        num_pos_landm = pos_land.long().sum(1, keepdim=True)
+        N1 = max(num_pos_landm.data.sum().float(), 1)
+        pos_idx_land = pos.unsqueeze(pos_land.dim()).expand_as(land_preds)
+        land_p = land_preds[pos_idx_land].view(-1, 10)
+        land_t = land_targets[pos_idx_land].view(-1, 10)
+        land_loss = F.smooth_l1_loss(land_p, land_t, reduction='sum')
+        
+        # Localization Loss (Smooth L1)
+        # Shape: [batch,num_priors,4]
+        pos = conf_targets != zeros
+        conf_targets[pos] = 1
+        ############# Localization Loss part ##############
+        pos_idx = pos.unsqueeze(pos.dim()).expand_as(loc_preds)
+        loc_p = loc_preds[pos_idx].view(-1, 4)
+        loc_t = loc_targets[pos_idx].view(-1, 4)
+        loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
+        
+        
+        ############### Confidence Loss part ###############
         # focal loss implementation(2)
-        pos_cls = conf_targets > -1
+        pos_cls = conf_targets
         mask = pos_cls.unsqueeze(2).expand_as(conf_preds)
         conf_p = conf_preds[mask].view(-1, conf_preds.size(2)).clone()
         p_t_log = -F.cross_entropy(conf_p, conf_targets[pos_cls], reduction='sum')
@@ -101,20 +107,18 @@ class FocalLoss(nn.Module):
         # This is focal loss presented in the paper eq(5)
         conf_loss = -self.alpha * ((1 - p_t) ** self.gamma * p_t_log)
 
-        ############# Localization Loss part ##############
-        pos = conf_targets > 0  # ignore background
-        pos_idx = pos.unsqueeze(pos.dim()).expand_as(loc_preds)
-        loc_p = loc_preds[pos_idx].view(-1, 4)
-        loc_t = loc_targets[pos_idx].view(-1, 4)
-        loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
+       
+
 
         num_pos = pos.long().sum(1, keepdim=True)
+        
         N = max(num_pos.data.sum(),
                 1)  # to avoid divide by 0. It is caused by data augmentation when crop the images. The cropping can distort the boxes
         conf_loss /= N  # exclude number of background?
         loc_loss /= N
+        land_loss /= N1
 
-        return loc_loss, conf_loss
+        return loc_loss, conf_loss, land_loss
 
     def one_hot(self, x, n):
         y = torch.eye(n)

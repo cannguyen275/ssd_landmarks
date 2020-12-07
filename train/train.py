@@ -29,34 +29,39 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
     training_loss = 0.0
     for i, data in enumerate(loader):
         print(".", end="", flush=True)
-        images, boxes, labels = data
+        images, boxes, landmarks_gt, labels = data
         images = images.to(device)
         boxes = boxes.to(device)
         labels = labels.to(device)
+        landmarks_gt = landmarks_gt.to(device)
 
         optimizer.zero_grad()
-        confidence, locations = net(images)
-        regression_loss, classification_loss = criterion(confidence, locations, labels, boxes)  # TODO CHANGE BOXES
-        loss = regression_loss + classification_loss
+        confidence, locations,landmarks = net(images)
+        regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels, boxes,landmarks_gt)  # TODO CHANGE BOXES
+        loss = regression_loss + classification_loss + landmark_loss
         loss.backward()
         optimizer.step()
 
         running_loss += loss.item()
         running_regression_loss += regression_loss.item()
         running_classification_loss += classification_loss.item()
+        running_landmark_loss += landmark_loss.item()
         if i and i % args.debug_steps == 0:
             avg_loss = running_loss / debug_steps
             avg_reg_loss = running_regression_loss / debug_steps
             avg_clf_loss = running_classification_loss / debug_steps
+            avg_lmd_loss = running_landmark_loss / debug_steps
             logging.info(
                 f"Epoch: {epoch}, Step: {i}, " +
                 f"train_avg_loss: {avg_loss:.4f}, " +
                 f"train_reg_loss: {avg_reg_loss:.4f}, " +
-                f"train_cls_loss: {avg_clf_loss:.4f}"
+                f"train_cls_loss: {avg_clf_loss:.4f}, " + 
+                f"train_lmd_loss: {avg_lmd_loss:.4f}, "
             )
             running_loss = 0.0
             running_regression_loss = 0.0
             running_classification_loss = 0.0
+            running_landmark_loss = 0.0
             training_loss = avg_loss
 
     return training_loss
@@ -73,16 +78,18 @@ def test(loader, net, criterion, device):
         images = images.to(device)
         boxes = boxes.to(device)
         labels = labels.to(device)
+        landmarks_gt = landmarks_gt.to(device)
         num += 1
         with torch.no_grad():
-            confidence, locations = net(images)
-            regression_loss, classification_loss = criterion(confidence, locations, labels, boxes)
-            loss = regression_loss + classification_loss
+            confidence, locations,landmarks = net(images)
+            regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels, boxes,landmarks_gt)
+            loss = regression_loss + classification_loss + landmark_loss
 
         running_loss += loss.item()
         running_regression_loss += regression_loss.item()
         running_classification_loss += classification_loss.item()
-    return running_loss / num, running_regression_loss / num, running_classification_loss / num
+        running_landmark_loss += landmark_loss.item()
+    return running_loss / num, running_regression_loss / num, running_classification_loss / num, running_landmark_loss / num
 
 
 def data_loader(config):
