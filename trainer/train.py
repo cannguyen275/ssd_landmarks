@@ -15,7 +15,7 @@ from datasets.wider_face import FaceDataset
 from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from utils.argument import _argument
 
-sys.path.append('/home/quannm/ssd_landmarks/')
+# sys.path.append('/home/quannm/ssd_landmarks/')
 timer = Timer()
 
 args = _argument()

@@ -173,7 +173,7 @@ def convert_boxes_to_locations(center_form_boxes, center_form_priors, center_var
 def decode_landm(landmarks, priors, center_variance,
                  size_variance):
     """Decode landm from predictions using priors to undo
-    the encoding we did for offset regression at train time.
+    the encoding we did for offset regression at trainer time.
     Args:
         pre (tensor): landm predictions for loc layers,
             Shape: [num_priors,10]
