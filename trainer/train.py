@@ -119,7 +119,7 @@ def data_loader(config):
     #     num_classes = len(dataset.class_names)
     # train_dataset = ConcatDataset(datasets)
 
-    loader = FaceDataset(root_path=os.path.join('/home/can/AI_Camera/EfficientFaceNet/data/widerface/train/images'),
+    loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
                          file_name='label_remake.txt',
                          preproc=preproc(300, (127, 127, 127)))
     logging.info("Train dataset size: {}".format(len(loader)))

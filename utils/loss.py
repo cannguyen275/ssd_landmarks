@@ -60,7 +60,7 @@ class FocalLoss(nn.Module):
         self.gamma = gamma
         self.alpha = alpha
 
-    def forward(self, conf_preds, loc_preds, land_preds, conf_targets, loc_targets, land_targets,):
+    def forward(self, conf_preds, loc_preds, land_preds, conf_targets, loc_targets, land_targets, ):
         """
             Args:
                 predictions (tuple): (conf_preds, loc_preds)
@@ -72,7 +72,7 @@ class FocalLoss(nn.Module):
                     loc_targets shape: [batch, n_anchors, 4]
                     land_targets shape: [batch, n_anchors, 10]
         """
-        
+
         # landm Loss (Smooth L1)
         # Shape: [batch,num_priors,10]
         ############# Landmark Loss part ##############
@@ -84,7 +84,7 @@ class FocalLoss(nn.Module):
         land_p = land_preds[pos_idx_land].view(-1, 10)
         land_t = land_targets[pos_idx_land].view(-1, 10)
         land_loss = F.smooth_l1_loss(land_p, land_t, reduction='sum')
-        
+
         # Localization Loss (Smooth L1)
         # Shape: [batch,num_priors,4]
         pos = conf_targets != zeros
@@ -94,8 +94,7 @@ class FocalLoss(nn.Module):
         loc_p = loc_preds[pos_idx].view(-1, 4)
         loc_t = loc_targets[pos_idx].view(-1, 4)
         loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
-        
-        
+
         ############### Confidence Loss part ###############
         # focal loss implementation(2)
         pos_cls = conf_targets
@@ -107,11 +106,8 @@ class FocalLoss(nn.Module):
         # This is focal loss presented in the paper eq(5)
         conf_loss = -self.alpha * ((1 - p_t) ** self.gamma * p_t_log)
 
-       
-
-
         num_pos = pos.long().sum(1, keepdim=True)
-        
+
         N = max(num_pos.data.sum(),
                 1)  # to avoid divide by 0. It is caused by data augmentation when crop the images. The cropping can distort the boxes
         conf_loss /= N  # exclude number of background?
