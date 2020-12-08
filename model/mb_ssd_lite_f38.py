@@ -42,9 +42,15 @@ def create_mb_ssd_lite_f38(num_classes, width_mult=1.0, use_batch_norm=True, onn
         SeperableConv2d(in_channels=1280, out_channels=anchors[2] * num_classes, kernel_size=3, padding=1),
         SeperableConv2d(in_channels=512, out_channels=anchors[3] * num_classes, kernel_size=3, padding=1),
     ])
+    landmark_headers  = ModuleList([
+        SeperableConv2d(in_channels=round(192 * width_mult), out_channels=anchors[0] * 10, kernel_size=3, padding=1),
+        SeperableConv2d(in_channels=576, out_channels=anchors[1] * 10, kernel_size=3, padding=1),
+        SeperableConv2d(in_channels=1280, out_channels=anchors[2] * 10, kernel_size=3, padding=1),
+        SeperableConv2d(in_channels=512, out_channels=anchors[3] * 10, kernel_size=3, padding=1),
+    ])
 
     return SSD(num_classes, base_net, source_layer_indexes,
-               extras, classification_headers, regression_headers, is_test=is_test, config=config)
+               extras, classification_headers, regression_headers, landmark_headers, is_test=is_test, config=config, device=torch.device('cpu'))
 
 def create_mb_ssd_lite_f38_predictor(net, candidate_size=200, nms_method=None, sigma=0.5, device=torch.device('cpu')):
     predictor = Predictor(net, config.image_size, config.image_mean,

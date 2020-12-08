@@ -15,7 +15,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector predictor With Pytorch')
-parser.add_argument("--net_type", default="rfb_tiny_mb2_ssd", type=str,help='mb2-ssd-lite_f19, mb2-ssd-lite_f38, rfb_tiny_mb2_ssd')
+parser.add_argument("--net_type", default="mb2-ssd-lite_f38", type=str,help='mb2-ssd-lite_f19, mb2-ssd-lite_f38, rfb_tiny_mb2_ssd')
 parser.add_argument('--model_path', default = '/home/quannm/github/ssd_landmarks/app/person/rfb_tiny_mb2_ssd_c64/rfb_tiny_mb2_ssd_c64_146_142_19.pth',
                      help='model weight')
 parser.add_argument('--label_path', default = '/home/quannm/github/ssd_landmarks/utils/labels/person.txt', help='class names lable')
@@ -34,7 +34,7 @@ def load_model():
     elif args.net_type == 'mb2-ssd-lite_f38':
         net = create_mb_ssd_lite_f38(len(class_names), is_test=True, )
         predictor = create_mb_ssd_lite_f38_predictor(net, candidate_size=2000)
-        net.load(args.model_path)
+        #net.load(args.model_path)
     elif args.net_type == 'mb2-ssd-lite_f38_person':
         net = create_mb_ssd_lite_f38_face(len(class_names), is_test=True, )
         predictor = create_mb_ssd_lite_f38_person_predictor(net, candidate_size=2000)
