@@ -5,7 +5,7 @@ from module.mobilent_v2 import MobileNetV2, InvertedResidual
 from module.ssd import SSD, GraphPath
 from utils.predictor import Predictor
 from utils.argument import _argument
-from model.config import mb_ssd_lite_f38_person_config as config
+from model.config import mb_ssd_lite_f38_face_config as config
 
 
 def SeperableConv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, onnx_compatible=False):

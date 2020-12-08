@@ -16,8 +16,8 @@ def _argument():
     parser.add_argument('--balance_data', action='store_true',
                         help="Balance training data by down-sampling more frequent labels.")
 
-    parser.add_argument('--net', default="mb2-ssd-lite_f38_person",
-                        help="It can be mb2-ssd-lite_f19, mb2-ssd-lite_f38,mb2-ssd-lite_f38_person, rfb_tiny_mb2_ssd")
+    parser.add_argument('--net', default="rfb_tiny_mb2_ssd",
+                        help="It can be mb2-ssd-lite_f19, mb2-ssd-lite_f38,mb2-ssd-lite_f38_face, rfb_tiny_mb2_ssd")
     parser.add_argument('--freeze_base_net', action='store_true',
                         help="Freeze base net layers.")
     parser.add_argument('--freeze_net', action='store_true',
@@ -76,7 +76,7 @@ def _argument():
                         help='valid when training')
 
     parser.add_argument('--checkpoint_folder',
-                        default='/media/ducanh/DATA/tienln/ai_camera/ai_camera_detector/weight/training',
+                        default='checkpoint/',
                         help='Directory for saving checkpoint models')
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO,

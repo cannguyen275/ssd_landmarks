@@ -2,20 +2,18 @@ import logging
 import sys
 import os
 import itertools
-from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 from datasets.data_loader import _DataLoader
 from module.ssd import MatchPrior
 from datasets.data_preprocessing import TrainAugmentation, TestTransform
-from torch.utils.data import DataLoader, ConcatDataset
-from utils.loss import MultiboxLoss, FocalLoss
+from torch.utils.data import DataLoader
+from utils.loss import FocalLoss
 import torch
 from datasets.data_augment import preproc
-from datasets.wider_face import FaceDataset
-from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
+from datasets.wider_face import FaceDataset, detection_collate
+from utils.misc import Timer, freeze_net_layers
 from utils.argument import _argument
 
-# sys.path.append('/home/quannm/ssd_landmarks/')
 timer = Timer()
 
 args = _argument()
@@ -26,6 +24,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
     running_loss = 0.0
     running_regression_loss = 0.0
     running_classification_loss = 0.0
+    running_landmark_loss = 0.0
     training_loss = 0.0
     for i, data in enumerate(loader):
         print(".", end="", flush=True)
@@ -36,8 +35,9 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
         landmarks_gt = landmarks_gt.to(device)
 
         optimizer.zero_grad()
-        confidence, locations,landmarks = net(images)
-        regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels, boxes,landmarks_gt)  # TODO CHANGE BOXES
+        confidence, locations, landmarks = net(images)
+        regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels, boxes,
+                                                                        landmarks_gt)  # TODO CHANGE BOXES
         loss = regression_loss + classification_loss + landmark_loss
         loss.backward()
         optimizer.step()
@@ -55,7 +55,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
                 f"Epoch: {epoch}, Step: {i}, " +
                 f"train_avg_loss: {avg_loss:.4f}, " +
                 f"train_reg_loss: {avg_reg_loss:.4f}, " +
-                f"train_cls_loss: {avg_clf_loss:.4f}, " + 
+                f"train_cls_loss: {avg_clf_loss:.4f}, " +
                 f"train_lmd_loss: {avg_lmd_loss:.4f}, "
             )
             running_loss = 0.0
@@ -75,15 +75,16 @@ def test(loader, net, criterion, device):
     running_landmark_loss = 0.0
     num = 0
     for _, data in enumerate(loader):
-        images, boxes, labels = data
+        images, boxes, landmarks_gt, labels = data
         images = images.to(device)
         boxes = boxes.to(device)
         labels = labels.to(device)
         landmarks_gt = landmarks_gt.to(device)
         num += 1
         with torch.no_grad():
-            confidence, locations,landmarks = net(images)
-            regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels, boxes,landmarks_gt)
+            confidence, locations, landmarks = net(images)
+            regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels,
+                                                                            boxes, landmarks_gt)
             loss = regression_loss + classification_loss + landmark_loss
 
         running_loss += loss.item()
@@ -121,23 +122,27 @@ def data_loader(config):
 
     loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
                          file_name='label_remake.txt',
-                         preproc=preproc(300, (127, 127, 127)))
+                         preproc=preproc(300, (127, 127, 127)),
+                         target_transform=target_transform)
     logging.info("Train dataset size: {}".format(len(loader)))
-    train_loader = DataLoader(loader, args.batch_size, num_workers=args.num_workers, shuffle=True)
+    train_loader = DataLoader(loader, args.batch_size, num_workers=args.num_workers, shuffle=True,
+                              collate_fn=detection_collate)
     if args.valid:
         # TODO: add validation dataset
         # Validation datasets
-        path_dataset = open("/home/quannm/ssd_landmarks/datasets/valid_dataset.txt", "r")
-        for line in path_dataset:
-            data = line.split('+')
-            Data_Valid.append([data[0], data[1][:-1]])
-        # print(Data_Valid)
-        logging.info("Prepare Validation datasets.")
-        valid_dataset_paths = [Data_Valid[0]]
-        for dataset_path in valid_dataset_paths:
-            val_dataset = _DataLoader(dataset_path, transform=test_transform, target_transform=target_transform)
-        val_loader = DataLoader(val_dataset, args.batch_size, num_workers=args.num_workers, shuffle=True)
-        return train_loader, val_loader, num_classes
+        # path_dataset = open("/home/quannm/ssd_landmarks/datasets/valid_dataset.txt", "r")
+        # for line in path_dataset:
+        #     data = line.split('+')
+        #     Data_Valid.append([data[0], data[1][:-1]])
+        # # print(Data_Valid)
+        # logging.info("Prepare Validation datasets.")
+        # valid_dataset_paths = [Data_Valid[0]]
+        # for dataset_path in valid_dataset_paths:
+        #     val_dataset = _DataLoader(dataset_path, transform=test_transform, target_transform=target_transform)
+        # val_loader = DataLoader(val_dataset, args.batch_size, num_workers=args.num_workers, shuffle=True)
+        # return train_loader, val_loader, num_classes
+        pass
+
     else:
         return train_loader
 
