@@ -80,7 +80,7 @@ class FocalLoss(nn.Module):
         pos_land = conf_targets > zeros  # ignore background and images without landmark 
         num_pos_landm = pos_land.long().sum(1, keepdim=True)
         N1 = max(num_pos_landm.data.sum().float(), 1)
-        pos_idx_land = pos.unsqueeze(pos_land.dim()).expand_as(land_preds)
+        pos_idx_land = pos_land.unsqueeze(pos_land.dim()).expand_as(land_preds)
         land_p = land_preds[pos_idx_land].view(-1, 10)
         land_t = land_targets[pos_idx_land].view(-1, 10)
         land_loss = F.smooth_l1_loss(land_p, land_t, reduction='sum')
