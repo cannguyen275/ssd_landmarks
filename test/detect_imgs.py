@@ -3,7 +3,7 @@ import sys
 sys.path.append('/home/quannm/github/ssd_landmarks')
 from model.mb_ssd_lite_f19 import create_mb_ssd_lite_f19, create_mb_ssd_lite_f19_predictor
 from model.mb_ssd_lite_f38 import create_mb_ssd_lite_f38, create_mb_ssd_lite_f38_predictor
-from model.mb_ssd_lite_f38_person import create_mb_ssd_lite_f38_person, create_mb_ssd_lite_f38_person_predictor
+from model.mb_ssd_lite_f38_face import create_mb_ssd_lite_f38_face, create_mb_ssd_lite_f38_person_predictor
 from model.rfb_tiny_mb_ssd import create_rfb_tiny_mb_ssd, create_rfb_tiny_mb_ssd_predictor
 
 from utils.misc import Timer
@@ -36,7 +36,7 @@ def load_model():
         predictor = create_mb_ssd_lite_f38_predictor(net, candidate_size=2000)
         net.load(args.model_path)
     elif args.net_type == 'mb2-ssd-lite_f38_person':
-        net = create_mb_ssd_lite_f38_person(len(class_names), is_test=True, )
+        net = create_mb_ssd_lite_f38_face(len(class_names), is_test=True, )
         predictor = create_mb_ssd_lite_f38_person_predictor(net, candidate_size=2000)
         net.load(args.model_path)
     elif args.net_type == 'rfb_tiny_mb2_ssd':

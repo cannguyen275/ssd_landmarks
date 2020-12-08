@@ -12,7 +12,7 @@ from utils.argument import _argument
 from trainer.train import train, test, data_loader, create_network
 from model.mb_ssd_lite_f38 import create_mb_ssd_lite_f38
 from model.config import mb_ssd_lite_f38_config
-from model.mb_ssd_lite_f38_person import create_mb_ssd_lite_f38_person
+from model.mb_ssd_lite_f38_face import create_mb_ssd_lite_f38_face
 from model.config import mb_ssd_lite_f38_person_config
 from model.mb_ssd_lite_f19 import create_mb_ssd_lite_f19
 from model.config import mb_ssd_lite_f19_config
@@ -50,7 +50,7 @@ class Train():
             create_net = create_mb_ssd_lite_f38
             config = mb_ssd_lite_f38_config
         elif self.args.net == 'mb2-ssd-lite_f38_person':
-            create_net = create_mb_ssd_lite_f38_person
+            create_net = create_mb_ssd_lite_f38_face
             config = mb_ssd_lite_f38_person_config
         elif self.args.net == 'rfb_tiny_mb2_ssd':
             create_net = create_rfb_tiny_mb_ssd

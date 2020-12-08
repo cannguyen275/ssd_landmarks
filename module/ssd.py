@@ -7,13 +7,15 @@ import torch.nn.functional as F
 # from ..utils import box_utils
 from utils import box_processing as box_utils
 from collections import namedtuple
+
 GraphPath = namedtuple("GraphPath", ['s0', 'name', 's1'])  #
 
 
 class SSD(nn.Module):
     def __init__(self, num_classes: int, base_net: nn.ModuleList, source_layer_indexes: List[int],
                  extras: nn.ModuleList, classification_headers: nn.ModuleList,
-                 regression_headers: nn.ModuleList,landmark_headers:nn.ModuleList,  is_test=False, config=None, device=None):
+                 regression_headers: nn.ModuleList, landmark_headers: nn.ModuleList, is_test=False, config=None,
+                 device=None):
         """Compose a SSD model using the given components.
         """
         super(SSD, self).__init__()
@@ -38,7 +40,7 @@ class SSD(nn.Module):
         if is_test:
             self.config = config
             self.priors = config.priors.to(self.device)
-            
+
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         confidences = []
         locations = []
@@ -72,7 +74,7 @@ class SSD(nn.Module):
                     x = layer(x)
                 end_layer_index += 1
             start_layer_index = end_layer_index
-            confidence, location,landmark = self.compute_header(header_index, y)
+            confidence, location, landmark = self.compute_header(header_index, y)
             header_index += 1
             confidences.append(confidence)
             locations.append(location)
@@ -83,7 +85,7 @@ class SSD(nn.Module):
 
         for layer in self.extras:
             x = layer(x)
-            confidence, location,landmark = self.compute_header(header_index, x)
+            confidence, location, landmark = self.compute_header(header_index, x)
             header_index += 1
             confidences.append(confidence)
             locations.append(location)
@@ -92,18 +94,19 @@ class SSD(nn.Module):
         confidences = torch.cat(confidences, 1)
         locations = torch.cat(locations, 1)
         landmarks = torch.cat(landmarks, 1)
-        
+
         if self.is_test:
             confidences = F.softmax(confidences, dim=2)
             boxes = box_utils.convert_locations_to_boxes(
                 locations, self.priors, self.config.center_variance, self.config.size_variance
             )
-            landmarks = box_utils.decode_landm(landmarks.data.squeeze(0), self.priors, self.config.center_variance, self.config.size_variance)
+            landmarks = box_utils.decode_landm(landmarks.data.squeeze(0), self.priors, self.config.center_variance,
+                                               self.config.size_variance)
             boxes = box_utils.center_form_to_corner_form(boxes)
-            
-            return confidences, boxes,landmarks
+
+            return confidences, boxes, landmarks
         else:
-            return confidences, locations,landmarks
+            return confidences, locations, landmarks
 
     def compute_header(self, i, x):
         confidence = self.classification_headers[i](x)
@@ -113,12 +116,12 @@ class SSD(nn.Module):
         location = self.regression_headers[i](x)
         location = location.permute(0, 2, 3, 1).contiguous()
         location = location.view(location.size(0), -1, 4)
-        
+
         landmark = self.landmark_headers[i](x)
         landmark = landmark.permute(0, 2, 3, 1).contiguous()
         landmark = landmark.view(location.size(0), -1, 10)
 
-        return confidence, location,landmark
+        return confidence, location, landmark
 
     def init_from_base_net(self, model):
         self.base_net.load_state_dict(torch.load(model, map_location=lambda storage, loc: storage), strict=True)
@@ -129,7 +132,8 @@ class SSD(nn.Module):
 
     def init_from_pretrained_ssd(self, model):
         state_dict = torch.load(model, map_location=lambda storage, loc: storage)
-        state_dict = {k: v for k, v in state_dict.items() if not (k.startswith("classification_headers") or k.startswith("regression_headers"))}
+        state_dict = {k: v for k, v in state_dict.items() if
+                      not (k.startswith("classification_headers") or k.startswith("regression_headers"))}
         model_dict = self.state_dict()
         model_dict.update(state_dict)
         self.load_state_dict(model_dict)
@@ -163,10 +167,11 @@ class MatchPrior(object):
             gt_boxes = torch.from_numpy(gt_boxes)
         if type(gt_labels) is np.ndarray:
             gt_labels = torch.from_numpy(gt_labels)
-        boxes, labels,landmarks = box_utils.assign_priors(gt_boxes, gt_labels, gt_landmarks,
-                                                self.corner_form_priors, self.iou_threshold)
+        boxes, labels, landmarks = box_utils.assign_priors(gt_boxes, gt_labels, gt_landmarks,
+                                                           self.corner_form_priors, self.iou_threshold)
         boxes = box_utils.corner_form_to_center_form(boxes)
-        locations = box_utils.convert_boxes_to_locations(boxes, self.center_form_priors, self.center_variance, self.size_variance)
+        locations = box_utils.convert_boxes_to_locations(boxes, self.center_form_priors, self.center_variance,
+                                                         self.size_variance)
         landmarks = box_utils.decode_landm(landmarks, self.center_form_priors, self.center_variance, self.size_variance)
         return locations, landmarks, labels
 
