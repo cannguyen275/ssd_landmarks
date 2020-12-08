@@ -94,13 +94,12 @@ class FocalLoss(nn.Module):
         loc_p = loc_preds[pos_idx].view(-1, 4)
         loc_t = loc_targets[pos_idx].view(-1, 4)
         loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
-
         ############### Confidence Loss part ###############
         # focal loss implementation(2)
-        pos_cls = conf_targets
+        pos_cls = conf_targets > 0
         mask = pos_cls.unsqueeze(2).expand_as(conf_preds)
         conf_p = conf_preds[mask].view(-1, conf_preds.size(2)).clone()
-        p_t_log = -F.cross_entropy(conf_p, conf_targets[pos_cls], reduction='sum')
+        p_t_log = -F.cross_entropy(conf_p, conf_targets[pos_cls].type(torch.long), reduction='sum')
         p_t = torch.exp(p_t_log)
 
         # This is focal loss presented in the paper eq(5)
@@ -116,6 +115,7 @@ class FocalLoss(nn.Module):
 
         return loc_loss, conf_loss, land_loss
 
-    def one_hot(self, x, n):
+    @staticmethod
+    def one_hot(x, n):
         y = torch.eye(n)
         return y[x]

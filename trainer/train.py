@@ -147,9 +147,9 @@ def data_loader(config):
         return train_loader
 
 
-def create_network(create_net, DEVICE, num_classes=2):
+def create_network(create_net, device, num_classes=2):
     logging.info("Build network.")
-    net = create_net(num_classes)
+    net = create_net(num_classes, device=device)
     # print(net)
     min_loss = -10000.0
     last_epoch = -1
@@ -202,7 +202,7 @@ def create_network(create_net, DEVICE, num_classes=2):
         net.init_from_pretrained_ssd(args.pretrained_ssd)
     logging.info(f'Took {timer.end("Load Model"):.2f} seconds to load the model.')
 
-    net.to(DEVICE)
+    net.to(device)
 
     # criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
     #                          center_variance=0.1, size_variance=0.2, device=DEVICE)

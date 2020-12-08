@@ -1,12 +1,13 @@
 import numpy as np
 import torch
 
-image_size = [320, 240]
+image_size = [300, 300]
 image_mean_test = image_mean = np.array([127, 127, 127])
 image_std = 128.0
 iou_threshold = 0.3
 center_variance = 0.1
 size_variance = 0.2
+
 
 def generate_priors(size):
     shrinkage_list = []
@@ -19,7 +20,7 @@ def generate_priors(size):
         for k in range(0, len(feature_map_list[i])):
             item_list.append(image_size[i] / feature_map_list[i][k])
         shrinkage_list.append(item_list)
-    
+
     for index in range(0, len(feature_map_list[0])):
         scale_w = image_size[0] / shrinkage_list[0][index]
         scale_h = image_size[1] / shrinkage_list[1][index]
@@ -36,10 +37,12 @@ def generate_priors(size):
                             x_center,
                             y_center,
                             w,
-                            h*ratio
+                            h * ratio
                         ])
     # print("priors nums:{}".format(len(priors)))
     priors = torch.tensor(priors)
     torch.clamp(priors, 0.0, 1.0, out=priors)
     return priors
-priors = generate_priors(320)
+
+
+priors = generate_priors(300)

@@ -16,7 +16,7 @@ def _argument():
     parser.add_argument('--balance_data', action='store_true',
                         help="Balance training data by down-sampling more frequent labels.")
 
-    parser.add_argument('--net', default="rfb_tiny_mb2_ssd",
+    parser.add_argument('--net', default="mb2-ssd-lite_f38",
                         help="It can be mb2-ssd-lite_f19, mb2-ssd-lite_f38,mb2-ssd-lite_f38_face, rfb_tiny_mb2_ssd")
     parser.add_argument('--freeze_base_net', action='store_true',
                         help="Freeze base net layers.")
