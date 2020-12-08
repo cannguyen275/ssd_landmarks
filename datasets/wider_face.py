@@ -120,13 +120,17 @@ def detection_collate(batch):
     boxes, landms, labels = [], [], []
     imgs = []
     for _, sample in enumerate(batch):
-        for _, tup in enumerate(sample):
-            if torch.is_tensor(tup):
-                imgs.append(tup)
-            elif isinstance(tup, type(np.empty(0))):
-                annos = torch.from_numpy(tup).float()
-                targets.append(annos)
-    return torch.stack(imgs, 0), targets
+        # for _, tup in enumerate(sample):
+        #     if torch.is_tensor(tup):
+        #         imgs.append(tup)
+        #     elif isinstance(tup, type(np.empty(0))):
+        #         annos = torch.from_numpy(tup).float()
+        #         targets.append(annos)
+        imgs.append(sample[0])
+        boxes.append(sample[1])
+        landms.append(sample[2])
+        labels.append(sample[3])
+    return torch.stack(imgs, 0), torch.stack(boxes, 0), torch.stack(landms, 0), torch.stack(labels, 0)
 
 
 class ImgAugTransform:
