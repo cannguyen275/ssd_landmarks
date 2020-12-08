@@ -71,7 +71,7 @@ def _argument():
     parser.add_argument('--debug_steps', default=20, type=int,
                         help='Set the debug log output frequency.')
     parser.add_argument('--use_cuda', default=True, type=str2bool,
-                        help='Use CUDA to train model')
+                        help='Use CUDA to trainer model')
     parser.add_argument('--valid', default=True, type=bool,
                         help='valid when training')
 

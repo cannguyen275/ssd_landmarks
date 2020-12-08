@@ -126,7 +126,7 @@ def analyze(image_name, detections, ground_truth, iou_th=0.6):
 
 if __name__ == "__main__":
     image_path = "/media/can/Data/Dataset/WiderFace/widerface/train/images"
-    txt_path = "helper/widerface_txt/widerface/train/images"
+    txt_path = "helper/widerface_txt/widerface/trainer/images"
     images_name, data = get_gt("helper/label.txt")
     new_label = []
     for index, name in enumerate(images_name):

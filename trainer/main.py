@@ -9,7 +9,7 @@ import torch
 # from torchsummary import summary
 from utils.loss import MultiboxLoss, FocalLoss
 from utils.argument import _argument
-from train.train import train, test, data_loader, create_network
+from trainer.train import train, test, data_loader, create_network
 from model.mb_ssd_lite_f38 import create_mb_ssd_lite_f38
 from model.config import mb_ssd_lite_f38_config
 from model.mb_ssd_lite_f38_person import create_mb_ssd_lite_f38_person
@@ -21,7 +21,7 @@ from model.config import rfb_tiny_mb_ssd_config
 from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 
-sys.path.append('/home/quannm/ssd_landmarks/')
+# sys.path.append('/home/quannm/ssd_landmarks/')
 
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'

@@ -15,7 +15,7 @@ from datasets.wider_face import FaceDataset
 from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from utils.argument import _argument
 
-sys.path.append('/home/quannm/ssd_landmarks/')
+# sys.path.append('/home/quannm/ssd_landmarks/')
 timer = Timer()
 
 args = _argument()
@@ -119,7 +119,7 @@ def data_loader(config):
     #     num_classes = len(dataset.class_names)
     # train_dataset = ConcatDataset(datasets)
 
-    loader = FaceDataset(root_path=os.path.join('/home/can/AI_Camera/EfficientFaceNet/data/widerface/train/images'),
+    loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
                          file_name='label_remake.txt',
                          preproc=preproc(300, (127, 127, 127)))
     logging.info("Train dataset size: {}".format(len(loader)))
