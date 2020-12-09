@@ -9,7 +9,7 @@ import torch
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector predictor With Pytorch')
 parser.add_argument("--net_type", default="rfb_tiny_mb2_ssd", type=str,help='mb2-ssd-lite_f19, mb2-ssd-lite_f38, rfb_tiny_mb2_ssd')
 parser.add_argument('--model_path', default = '/media/ducanh/DATA/tienln/ai_camera/tiny_ssd/models/train_model/Epoch-146-loss-1.42-val-1.9.pth',help='model weight')
-parser.add_argument('--label_path', default = '/media/ducanh/DATA/tienln/ai_camera/detector/utils/labels/person.txt', help='class names lable')
+parser.add_argument('--label_path', default = '/media/ducanh/DATA/tienln/ai_camera/detector/utils/labels/face.txt', help='class names lable')
 args = parser.parse_args()
 
 num_classes = len([name.strip() for name in open(args.label_path).readlines()])

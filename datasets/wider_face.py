@@ -142,20 +142,20 @@ class ImgAugTransform:
                               iaa.Sometimes(0.25, iaa.MotionBlur(k=5, angle=[-45, 45])),
                               iaa.Sometimes(0.25, iaa.GaussianBlur(sigma=(0, 1.3)))
                           ])),
-            iaa.Sometimes(0.2,
-                          iaa.OneOf([
-                              iaa.Sharpen(alpha=(0.0, 1.0), lightness=(0.75, 2.0)),
-                              iaa.Emboss(alpha=(0.0, 1.0), strength=(0.5, 1.5)),
-                              iaa.EdgeDetect(alpha=(0.0, 1.0)),
-                              iaa.DirectedEdgeDetect(alpha=(0.0, 1.0), direction=(0.0, 1.0)),
-                              iaa.Canny(
-                                  alpha=(0.0, 0.5),
-                                  colorizer=iaa.RandomColorsBinaryImageColorizer(
-                                      color_true=255,
-                                      color_false=0
-                                  )
-                              )
-                          ])),
+            # iaa.Sometimes(0.2,
+            #               iaa.OneOf([
+            #                   iaa.Sharpen(alpha=(0.0, 1.0), lightness=(0.75, 2.0)),
+            #                   iaa.Emboss(alpha=(0.0, 1.0), strength=(0.5, 1.5)),
+            #                   iaa.EdgeDetect(alpha=(0.0, 1.0)),
+            #                   iaa.DirectedEdgeDetect(alpha=(0.0, 1.0), direction=(0.0, 1.0)),
+            #                   iaa.Canny(
+            #                       alpha=(0.0, 0.5),
+            #                       colorizer=iaa.RandomColorsBinaryImageColorizer(
+            #                           color_true=255,
+            #                           color_false=0
+            #                       )
+            #                   )
+            #               ])),
             iaa.Sometimes(0.2,
                           iaa.OneOf([
                               iaa.GammaContrast((0.5, 2.0)),
@@ -178,31 +178,31 @@ class ImgAugTransform:
                               iaa.Multiply((0.5, 1.5), per_channel=0.5),
                               iaa.Sometimes(0.15, iaa.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(-30, 30)))
                           ])),
-            iaa.Sometimes(0.15,
-                          iaa.OneOf([iaa.Dropout(p=(0, 0.1)),
-                                     iaa.Dropout2d(p=0.1),
-                                     iaa.SaltAndPepper(0.1),
-                                     ])),
-            iaa.Sometimes(0.25,
-                          iaa.OneOf([iaa.BlendAlphaElementwise((0, 1.0), iaa.AddToHue(100)),
-                                     iaa.BlendAlphaSimplexNoise(iaa.EdgeDetect(1.0), upscale_method="linear"),
-                                     iaa.BlendAlphaElementwise([0.25, 0.75], iaa.MedianBlur(5)),
-                                     iaa.BlendAlphaSomeColors(iaa.AveragePooling(7), from_colorspace="BGR"),
-                                     iaa.BlendAlphaHorizontalLinearGradient(
-                                         iaa.TotalDropout(1.0),
-                                         min_value=0.2, max_value=0.8),
-                                     iaa.BlendAlphaHorizontalLinearGradient(
-                                         iaa.AveragePooling(11),
-                                         start_at=(0.0, 1.0), end_at=(0.0, 1.0)),
-
-                                     ])),
-            iaa.Sometimes(0.15,
-                          iaa.OneOf([
-                              iaa.Clouds(),
-                              iaa.Fog(),
-                              iaa.Snowflakes(flake_size=(0.1, 0.4), speed=(0.01, 0.05)),
-                              iaa.Rain(speed=(0.1, 0.3))
-                          ])),
+            # iaa.Sometimes(0.15,
+            #               iaa.OneOf([iaa.Dropout(p=(0, 0.1)),
+            #                          iaa.Dropout2d(p=0.1),
+            #                          iaa.SaltAndPepper(0.1),
+            #                          ])),
+            # iaa.Sometimes(0.25,
+            #               iaa.OneOf([iaa.BlendAlphaElementwise((0, 1.0), iaa.AddToHue(100)),
+            #                          # iaa.BlendAlphaSimplexNoise(iaa.EdgeDetect(1.0), upscale_method="linear"),
+            #                          iaa.BlendAlphaElementwise([0.25, 0.75], iaa.MedianBlur(5)),
+            #                          # iaa.BlendAlphaSomeColors(iaa.AveragePooling(7), from_colorspace="BGR"),
+            #                          # iaa.BlendAlphaHorizontalLinearGradient(
+            #                          #     iaa.TotalDropout(1.0),
+            #                          #     min_value=0.2, max_value=0.8),
+            #                          # iaa.BlendAlphaHorizontalLinearGradient(
+            #                          #     iaa.AveragePooling(11),
+            #                          #     start_at=(0.0, 1.0), end_at=(0.0, 1.0)),
+            #
+            #                          ])),
+            # iaa.Sometimes(0.15,
+            #               iaa.OneOf([
+            #                   iaa.Clouds(),
+            #                   iaa.Fog(),
+            #                   iaa.Snowflakes(flake_size=(0.1, 0.4), speed=(0.01, 0.05)),
+            #                   iaa.Rain(speed=(0.1, 0.3))
+            #               ])),
             # iaa.Sometimes(0.15,
             #               iaa.OneOf([
             #                   iaa.Cartoon(),

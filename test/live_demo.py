@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector pred
 parser.add_argument("--net_type", default="rfb_tiny_mb2_ssd", type=str,help='mb2-ssd-lite_f19, mb2-ssd-lite_f38, rfb_tiny_mb2_ssd')
 parser.add_argument('--model_path', default = 'app/person/rfb_tiny_mb2_ssd_c32/rfb_tiny_mb2_ssd_c32_63_208_222.pth',
                      help='model weight')
-parser.add_argument('--label_path', default = '/media/ducanh/DATA/tienln/ai_camera/ai_camera_detector/utils/labels/person.txt', help='class names lable')
+parser.add_argument('--label_path', default = '/media/ducanh/DATA/tienln/ai_camera/ai_camera_detector/utils/labels/face.txt', help='class names lable')
 parser.add_argument('--result_path', default = 'results', help='result path to save')
 parser.add_argument('--test_path', default = "mall", help='path of folder test')
 parser.add_argument('--test_device', default="cpu", type=str,help='cuda:0 or cpu')

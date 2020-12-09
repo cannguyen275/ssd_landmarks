@@ -37,7 +37,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
         optimizer.zero_grad()
         confidence, locations, landmarks = net(images)
         regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels, boxes,
-                                                                        landmarks_gt)  # TODO CHANGE BOXES
+                                                                        landmarks_gt)
         loss = regression_loss + classification_loss + landmark_loss
         loss.backward()
         optimizer.step()
@@ -100,25 +100,6 @@ def data_loader(config):
     test_transform = TestTransform(config.image_size, config.image_mean, config.image_std)
 
     logging.info("Prepare training datasets.")
-    # Data_Train = []
-    # Data_Valid = []
-    # datasets = []
-    #
-    # path_dataset = open("/home/quannm/ssd_landmarks/datasets/train_dataset.txt", "r")
-    # for line in path_dataset:
-    #     data = line.split('+')
-    #     Data_Train.append([data[0], data[1][:-1]])
-    #
-    # # training datasets
-    # # dataset_paths = [Data_Train[0],Data_Train[1],Data_Train[2],Data_Train[3],Data_Train[4],Data_Train[5]]
-    # dataset_paths = [Data_Train[0], Data_Train[1]]
-    # for dataset_path in dataset_paths:
-    #     print(dataset_path)
-    #     dataset = _DataLoader(dataset_path, transform=train_transform, target_transform=target_transform)
-    #     print(len(dataset.ids))
-    #     datasets.append(dataset)
-    #     num_classes = len(dataset.class_names)
-    # train_dataset = ConcatDataset(datasets)
 
     loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
                          file_name='label_remake.txt',
@@ -129,18 +110,6 @@ def data_loader(config):
                               collate_fn=detection_collate)
     if args.valid:
         # TODO: add validation dataset
-        # Validation datasets
-        # path_dataset = open("/home/quannm/ssd_landmarks/datasets/valid_dataset.txt", "r")
-        # for line in path_dataset:
-        #     data = line.split('+')
-        #     Data_Valid.append([data[0], data[1][:-1]])
-        # # print(Data_Valid)
-        # logging.info("Prepare Validation datasets.")
-        # valid_dataset_paths = [Data_Valid[0]]
-        # for dataset_path in valid_dataset_paths:
-        #     val_dataset = _DataLoader(dataset_path, transform=test_transform, target_transform=target_transform)
-        # val_loader = DataLoader(val_dataset, args.batch_size, num_workers=args.num_workers, shuffle=True)
-        # return train_loader, val_loader, num_classes
         pass
 
     else:

@@ -22,7 +22,7 @@ def SeperableConv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=
 
 
 def create_mb_ssd_lite_f38_face(num_classes, width_mult=1.0, use_batch_norm=True, onnx_compatible=True,
-                                is_test=False):
+                                is_test=False, device='cuda:0'):
     anchors = [6, 6, 6, 6, 6, 6, 6]
     base_net = MobileNetV2(width_mult=width_mult, use_batch_norm=use_batch_norm,
                            onnx_compatible=onnx_compatible).features

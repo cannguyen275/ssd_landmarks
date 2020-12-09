@@ -201,6 +201,7 @@ def _pad_to_square(image, rgb_mean, pad_image_flag):
     long_side = max(width, height)
     image_t = np.empty((long_side, long_side, 3), dtype=image.dtype)
     image_t[:, :] = rgb_mean
+    #image_t[:, :] /= 128.0
     image_t[0:0 + height, 0:0 + width] = image
     return image_t
 
@@ -237,11 +238,13 @@ class preproc(object):
         scale = image_t.shape[1] / height
         boxes_t *= scale
         landm_t *= scale
+        debug = False
         if debug:
             # Debug:
             img_debug = image_t.copy()
             img_debug = img_debug.transpose(1, 2, 0)
             img_debug += self.rgb_means
+            img_debug *= 128.0
             img_debug = np.uint8(img_debug)
             cv2.imwrite("test_temp.jpg", img_debug)
             img_debug = cv2.imread('test_temp.jpg')
