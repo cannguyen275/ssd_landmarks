@@ -9,7 +9,6 @@ class MultiboxLoss(nn.Module):
     def __init__(self, priors, iou_threshold, neg_pos_ratio,
                  center_variance, size_variance, device):
         """Implement SSD Multibox Loss.
-
         Basically, Multibox loss combines classification loss
          and Smooth L1 regression loss.
         """
@@ -23,7 +22,6 @@ class MultiboxLoss(nn.Module):
 
     def forward(self, confidence, predicted_locations, labels, gt_locations):
         """Compute classification loss and smooth l1 loss.
-
         Args:
             confidence (batch_size, num_priors, num_classes): class predictions.
             locations (batch_size, num_priors, 4): predicted locations.
@@ -76,8 +74,8 @@ class FocalLoss(nn.Module):
         # landm Loss (Smooth L1)
         # Shape: [batch,num_priors,10]
         ############# Landmark Loss part ##############
-        zeros = torch.tensor(0).cuda()
-        pos_land = conf_targets > zeros  # ignore background and images without landmark 
+        #zeros = torch.tensor(0).cuda()
+        pos_land = conf_targets > 0  # ignore background and images without landmark 
         num_pos_landm = pos_land.long().sum(1, keepdim=True)
         N1 = max(num_pos_landm.data.sum().float(), 1)
         pos_idx_land = pos_land.unsqueeze(pos_land.dim()).expand_as(land_preds)
@@ -87,7 +85,7 @@ class FocalLoss(nn.Module):
 
         # Localization Loss (Smooth L1)
         # Shape: [batch,num_priors,4]
-        pos = conf_targets != zeros
+        pos = conf_targets != 0
         conf_targets[pos] = 1
         ############# Localization Loss part ##############
         pos_idx = pos.unsqueeze(pos.dim()).expand_as(loc_preds)
@@ -96,7 +94,7 @@ class FocalLoss(nn.Module):
         loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
         ############### Confidence Loss part ###############
         # focal loss implementation(2)
-        pos_cls = conf_targets > 0
+        pos_cls = conf_targets > -1
         mask = pos_cls.unsqueeze(2).expand_as(conf_preds)
         conf_p = conf_preds[mask].view(-1, conf_preds.size(2)).clone()
         p_t_log = -F.cross_entropy(conf_p, conf_targets[pos_cls].type(torch.long), reduction='sum')
