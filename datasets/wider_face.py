@@ -228,5 +228,5 @@ if __name__ == "__main__":
     print(len(loader))
     for i in range(0, len(loader)):
         print("\n****")
-        print(i)
+        # print(i)
         a = loader.__getitem__(i)

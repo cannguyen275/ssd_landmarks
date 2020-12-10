@@ -43,12 +43,13 @@ def _argument():
     # Params for loading pretrained basenet or checkpoints.
     parser.add_argument('--base_net',
                         help='Pretrained base model')
-    parser.add_argument('--pretrained_ssd', help='Pre-trained base model')
+    parser.add_argument('--pretrained_ssd', default=N,
+                        help='Pre-trained base model')
     parser.add_argument('--resume', default=None, type=str,
                         help='Checkpoint state_dict file to resume training from')
 
     # Scheduler
-    parser.add_argument('--scheduler', default="multi-step", type=str,
+    parser.add_argument('--scheduler', default="cosine", type=str,
                         help="Scheduler for SGD. It can one of multi-step and cosine")
 
     # Params for Multi-step Scheduler

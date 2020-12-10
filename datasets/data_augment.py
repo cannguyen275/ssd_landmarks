@@ -248,21 +248,22 @@ class preproc(object):
             img_debug = np.uint8(img_debug)
             cv2.imwrite("test_temp.jpg", img_debug)
             img_debug = cv2.imread('test_temp.jpg')
+            print(len(boxes_t))
             for index, b in enumerate(boxes_t):
                 b = [int(x) for x in b.tolist()]
                 b += [1]
                 b += [int(x) for x in landm_t[index].tolist()]
 
-                cv2.rectangle(img_debug, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 2)
+                cv2.rectangle(img_debug, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 1)
                 cx = b[0]
                 cy = b[1] + 12
 
                 # landms
-                cv2.circle(img_debug, (b[5], b[6]), 1, (0, 0, 255), 4)
-                cv2.circle(img_debug, (b[7], b[8]), 1, (0, 255, 255), 4)
-                cv2.circle(img_debug, (b[9], b[10]), 1, (255, 0, 255), 4)
-                cv2.circle(img_debug, (b[11], b[12]), 1, (0, 255, 0), 4)
-                cv2.circle(img_debug, (b[13], b[14]), 1, (255, 0, 0), 4)
+                cv2.circle(img_debug, (b[5], b[6]), 1, (0, 0, 255), 1)
+                cv2.circle(img_debug, (b[7], b[8]), 1, (0, 255, 255), 1)
+                cv2.circle(img_debug, (b[9], b[10]), 1, (255, 0, 255), 1)
+                cv2.circle(img_debug, (b[11], b[12]), 1, (0, 255, 0), 1)
+                cv2.circle(img_debug, (b[13], b[14]), 1, (255, 0, 0), 1)
 
             name = "test_augmentation_1.jpg"
             cv2.imshow("test", img_debug)

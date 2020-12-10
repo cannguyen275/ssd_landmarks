@@ -16,10 +16,10 @@ SSDBoxSizes = collections.namedtuple('SSDBoxSizes', ['min', 'max'])
 SSDSpec = collections.namedtuple('SSDSpec', ['feature_map_size', 'shrinkage', 'box_sizes', 'aspect_ratios'])
 
 specs = [
-    SSDSpec(38, 8, SSDBoxSizes(16, 32), [1.7]),
-    SSDSpec(19, 16, SSDBoxSizes(32, 64), [1.7]),
-    SSDSpec(10, 32, SSDBoxSizes(64, 128), [1.7]),
-    SSDSpec(5, 64, SSDBoxSizes(128, 256), [1.7]),
+    SSDSpec(38, 8, SSDBoxSizes(16, 32), [1.0]),
+    SSDSpec(19, 16, SSDBoxSizes(32, 64), [1.0]),
+    SSDSpec(10, 32, SSDBoxSizes(64, 128), [1.0]),
+    SSDSpec(5, 64, SSDBoxSizes(128, 256), [1.0]),
 ]
 
 

@@ -129,16 +129,19 @@ class SSD(nn.Module):
         self.extras.apply(_xavier_init_)
         self.classification_headers.apply(_xavier_init_)
         self.regression_headers.apply(_xavier_init_)
+        self.landmark_headers.apply(_xavier_init_())
 
     def init_from_pretrained_ssd(self, model):
         state_dict = torch.load(model, map_location=lambda storage, loc: storage)
         state_dict = {k: v for k, v in state_dict.items() if
-                      not (k.startswith("classification_headers") or k.startswith("regression_headers"))}
+                      not (k.startswith("classification_headers") or k.startswith("regression_headers") or k.startswith(
+                          "landmark_headers"))}
         model_dict = self.state_dict()
         model_dict.update(state_dict)
         self.load_state_dict(model_dict)
         self.classification_headers.apply(_xavier_init_)
         self.regression_headers.apply(_xavier_init_)
+        self.landmark_headers.apply(_xavier_init_())
 
     def init(self):
         self.base_net.apply(_xavier_init_)
@@ -146,6 +149,7 @@ class SSD(nn.Module):
         self.extras.apply(_xavier_init_)
         self.classification_headers.apply(_xavier_init_)
         self.regression_headers.apply(_xavier_init_)
+        self.landmark_headers.apply(_xavier_init_())
 
     def load(self, model):
         self.load_state_dict(torch.load(model, map_location=lambda storage, loc: storage))
@@ -174,7 +178,7 @@ class MatchPrior(object):
         boxes = box_utils.corner_form_to_center_form(boxes)
         locations = box_utils.convert_boxes_to_locations(boxes, self.center_form_priors, self.center_variance,
                                                          self.size_variance)
-        landmarks = box_utils.decode_landm(landmarks, self.center_form_priors, self.center_variance, self.size_variance)
+        landmarks = box_utils.encode_landm(landmarks, self.center_form_priors, self.center_variance, self.size_variance)
         return locations, landmarks, labels
 
 

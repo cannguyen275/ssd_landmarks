@@ -87,11 +87,13 @@ class FocalLoss(nn.Module):
         # Shape: [batch,num_priors,4]
         pos = conf_targets != 0
         conf_targets[pos] = 1
+
         ############# Localization Loss part ##############
         pos_idx = pos.unsqueeze(pos.dim()).expand_as(loc_preds)
         loc_p = loc_preds[pos_idx].view(-1, 4)
         loc_t = loc_targets[pos_idx].view(-1, 4)
         loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
+
         ############### Confidence Loss part ###############
         # focal loss implementation(2)
         pos_cls = conf_targets > -1

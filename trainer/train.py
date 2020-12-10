@@ -137,14 +137,17 @@ def create_network(create_net, device, num_classes=2):
             ), 'lr': extra_layers_lr},
             {'params': itertools.chain(
                 net.regression_headers.parameters(),
-                net.classification_headers.parameters()
+                net.classification_headers.parameters(),
+                net.landmark_headers.parameters()
             )}
         ]
     elif args.freeze_net:
         freeze_net_layers(net.base_net)
         freeze_net_layers(net.source_layer_add_ons)
         freeze_net_layers(net.extras)
-        params = itertools.chain(net.regression_headers.parameters(), net.classification_headers.parameters())
+        params = itertools.chain(net.regression_headers.parameters(),
+                                 net.classification_headers.parameters(),
+                                 net.landmark_headers.parameters())
         logging.info("Freeze all the layers except prediction heads.")
     else:
         params = [
@@ -155,11 +158,13 @@ def create_network(create_net, device, num_classes=2):
             ), 'lr': extra_layers_lr},
             {'params': itertools.chain(
                 net.regression_headers.parameters(),
-                net.classification_headers.parameters()
+                net.classification_headers.parameters(),
+                net.landmark_headers.parameters()
             )}
         ]
 
     timer.start("Load Model")
+    net.init()
     if args.resume:
         logging.info(f"Resume from the model {args.resume}")
         net.load(args.resume)

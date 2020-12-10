@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector pred
 parser.add_argument("--net_type", default="mb2-ssd-lite_f38", type=str,
                     help='mb2-ssd-lite_f19, mb2-ssd-lite_f38, rfb_tiny_mb2_ssd')
 parser.add_argument('--model_path',
-                    default='trainer/checkpoint/mb2-ssd-lite_f38/mb2-ssd-lite_f38-epoch-142-train_loss-1.5.pth',
+                    default='trainer/checkpoint/mb2-ssd-lite_f38/mb2-ssd-lite_f38-epoch-334-train_loss-4.96.pth',
                     help='model weight')
 parser.add_argument('--label_path', default='utils/labels/face.txt',
                     help='class names lable')
