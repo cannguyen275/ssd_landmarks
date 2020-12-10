@@ -141,7 +141,7 @@ class SSD(nn.Module):
         self.load_state_dict(model_dict)
         self.classification_headers.apply(_xavier_init_)
         self.regression_headers.apply(_xavier_init_)
-        self.landmark_headers.apply(_xavier_init_())
+        self.landmark_headers.apply(_xavier_init_)
 
     def init(self):
         self.base_net.apply(_xavier_init_)
@@ -149,7 +149,7 @@ class SSD(nn.Module):
         self.extras.apply(_xavier_init_)
         self.classification_headers.apply(_xavier_init_)
         self.regression_headers.apply(_xavier_init_)
-        self.landmark_headers.apply(_xavier_init_())
+        self.landmark_headers.apply(_xavier_init_)
 
     def load(self, model):
         self.load_state_dict(torch.load(model, map_location=lambda storage, loc: storage))
