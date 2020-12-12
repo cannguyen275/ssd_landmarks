@@ -49,11 +49,11 @@ def _argument():
                         help='Checkpoint state_dict file to resume training from')
 
     # Scheduler
-    parser.add_argument('--scheduler', default="cosine", type=str,
+    parser.add_argument('--scheduler', default="multi-step", type=str,
                         help="Scheduler for SGD. It can one of multi-step and cosine")
 
     # Params for Multi-step Scheduler
-    parser.add_argument('--milestones', default="80,100", type=str,
+    parser.add_argument('--milestones', default="40,60, 80", type=str,
                         help="milestones for MultiStepLR")
 
     # Params for Cosine Annealingmodels/mb2-ssd-lite-epoch-8-train_loss-2.88-val_loss-2.6.pth
