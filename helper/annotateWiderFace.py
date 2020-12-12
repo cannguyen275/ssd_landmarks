@@ -78,6 +78,13 @@ def draw_detections(img, box, text, color=(255, 0, 0)):
     return img
 
 
+def is_negative(list_input):
+    for x in list_input:
+        if x < 0:
+            return True
+    return False
+
+
 def analyze(image_name, detections, ground_truth, iou_th=0.6):
     gt_to_detection = {}
     detection_to_gt = {}
@@ -97,7 +104,8 @@ def analyze(image_name, detections, ground_truth, iou_th=0.6):
         gt_bbox = [image_gt[0], image_gt[1], image_gt[0] + image_gt[2], image_gt[1] + image_gt[3]]
         gt_lands = [image_gt[4], image_gt[5], image_gt[7], image_gt[8], image_gt[10], image_gt[11], image_gt[13],
                     image_gt[14], image_gt[16], image_gt[17]]
-
+        if is_negative(gt_xywh) or is_negative(gt_lands):
+            continue
         if gt_lands[0] > 0:
             data_out.append(image_gt)
             continue
@@ -126,12 +134,12 @@ def analyze(image_name, detections, ground_truth, iou_th=0.6):
 
 if __name__ == "__main__":
     image_path = "/media/can/Data/Dataset/WiderFace/widerface/train/images"
-    txt_path = "helper/widerface_txt/widerface/trainer/images"
+    txt_path = "helper/widerface_txt/widerface/train/images"
     images_name, data = get_gt("helper/label.txt")
     new_label = []
     for index, name in enumerate(images_name):
         print("\n", name)
-        image = cv2.imread(os.path.join(image_path, name))
+        # image = cv2.imread(os.path.join(image_path, name))
         gt = data[index]
         predict_filePath = os.path.join(txt_path, name[:-4] + ".txt")
         # Load predict file

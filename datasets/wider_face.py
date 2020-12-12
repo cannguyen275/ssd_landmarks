@@ -33,7 +33,10 @@ class FaceDataset(data.Dataset):
             annotation[0, 1] = label[1]  # y1
             annotation[0, 2] = label[0] + label[2]  # x2
             annotation[0, 3] = label[1] + label[3]  # y2
-
+            if label[2] == 0 or label[3] == 0:
+                print(self.path_images[idx])
+                print(idx)
+                print(labels)
             # landmarks
             annotation[0, 4] = label[4]  # l0_x
             annotation[0, 5] = label[5]  # l0_y
