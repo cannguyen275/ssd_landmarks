@@ -19,12 +19,12 @@ parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector pred
 parser.add_argument("--net_type", default="mb2-ssd-lite_f38", type=str,
                     help='mb2-ssd-lite_f19, mb2-ssd-lite_f38, rfb_tiny_mb2_ssd')
 parser.add_argument('--model_path',
-                    default='trainer/checkpoint/mb2-ssd-lite_f38/mb2-ssd-lite_f38-epoch-334-train_loss-4.96.pth',
+                    default='/home/quannm/github/ssd_landmarks/checkpoint/mb2-ssd-lite_f38/mb2-ssd-lite_f38-epoch-6-train_loss-11.5.pth',
                     help='model weight')
 parser.add_argument('--label_path', default='utils/labels/face.txt',
                     help='class names lable')
 parser.add_argument('--result_path', default='detect_results', help='result path to save')
-parser.add_argument('--test_path', default="/media/can/Data/Dataset/WiderFace/widerface/train/images/0--Parade",
+parser.add_argument('--test_path', default="/home/quannm/github/ssd_landmarks/testdata",
                     help='path of folder test')
 parser.add_argument('--test_device', default="cpu", type=str, help='cuda:0 or cpu')
 args = parser.parse_args()
