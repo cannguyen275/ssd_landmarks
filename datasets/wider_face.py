@@ -224,7 +224,7 @@ class ImgAugTransform:
 if __name__ == "__main__":
     from datasets.data_augment import preproc
 
-    loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
+    loader = FaceDataset(root_path=os.path.join('/media/quannm/DATAQUAN/WiderFace/widerface/train/images'),
                          file_name='label_remake.txt',
                          preproc=preproc(300, (127, 127, 127)))
     print(len(loader))

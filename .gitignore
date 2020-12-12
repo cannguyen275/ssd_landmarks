@@ -3,3 +3,5 @@ Face-Detector-1MB-with-landmark/
 helper/widerface_txt/
 detect_results/
 checkpoint/
+testdata/
+runs/
