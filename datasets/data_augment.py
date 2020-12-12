@@ -238,6 +238,7 @@ class preproc(object):
         scale = image_t.shape[1] / height
         boxes_t *= scale
         landm_t *= scale
+
         debug = False
         if debug:
             # Debug:

@@ -2,3 +2,4 @@ Face-Detector-1MB-with-landmark/
 .idea/
 helper/widerface_txt/
 detect_results/
+checkpoint/

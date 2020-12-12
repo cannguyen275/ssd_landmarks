@@ -104,7 +104,8 @@ def analyze(image_name, detections, ground_truth, iou_th=0.6):
         gt_bbox = [image_gt[0], image_gt[1], image_gt[0] + image_gt[2], image_gt[1] + image_gt[3]]
         gt_lands = [image_gt[4], image_gt[5], image_gt[7], image_gt[8], image_gt[10], image_gt[11], image_gt[13],
                     image_gt[14], image_gt[16], image_gt[17]]
-        if is_negative(gt_xywh) or is_negative(gt_lands):
+
+        if is_negative(gt_xywh) or image_gt[2] == 0 or image_gt[3] == 0:
             continue
         if gt_lands[0] > 0:
             data_out.append(image_gt)
@@ -118,16 +119,11 @@ def analyze(image_name, detections, ground_truth, iou_th=0.6):
             inter = intersect(det_bbox, gt_bbox)  # Intersection of predicted and GT bounding-boxes
             uni = union(det_bbox, gt_bbox)  # Union of predicted and GT bounding-boxes
             ratio = area(inter) / float(area(uni))  # IoU measure between predicted and GT bounding-boxes
-            print("mark 3", ratio)
             if ratio > iou_th:
-                print("mark 2", ratio)
-                print(gt_xywh + det_lands)
-                data_out.append(det_xywh + det_lands)
-                print(data_out)
+                data_out.append(gt_xywh + det_lands)
                 flag = True
                 break
         if not flag:
-            print('mark3')
             data_out.append(image_gt)
     return data_out
 
@@ -139,7 +135,7 @@ if __name__ == "__main__":
     new_label = []
     for index, name in enumerate(images_name):
         print("\n", name)
-        # image = cv2.imread(os.path.join(image_path, name))
+        image = cv2.imread(os.path.join(image_path, name))
         gt = data[index]
         predict_filePath = os.path.join(txt_path, name[:-4] + ".txt")
         # Load predict file
