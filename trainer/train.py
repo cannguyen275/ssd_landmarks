@@ -101,7 +101,7 @@ def data_loader(config):
 
     logging.info("Prepare training datasets.")
 
-    loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
+    loader = FaceDataset(root_path=os.path.join('/home/dev/DATAEXT2/cannn1/widerface/train/images'),
                          file_name='label_remake.txt',
                          preproc=preproc(300, (127, 127, 127)),
                          target_transform=target_transform)
