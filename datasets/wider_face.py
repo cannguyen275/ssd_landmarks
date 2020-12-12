@@ -21,12 +21,12 @@ class FaceDataset(data.Dataset):
     def __getitem__(self, idx):
         img_raw = cv2.imread(self.path_images[idx])
         img = self.augment(img_raw)
-        labels = self.labels[idx]
+        labels_image = self.labels[idx]
 
         annotations = np.zeros((0, 15))
-        if len(labels) == 0:
+        if len(labels_image) == 0:
             return annotations
-        for idx, label in enumerate(labels):
+        for idx, label in enumerate(labels_image):
             annotation = np.zeros((1, 15))
             # bbox
             annotation[0, 0] = label[0]  # x1
@@ -45,7 +45,7 @@ class FaceDataset(data.Dataset):
             annotation[0, 11] = label[14]  # l3_y
             annotation[0, 12] = label[16]  # l4_x
             annotation[0, 13] = label[17]  # l4_y
-            if (annotation[0, 4] < 0):
+            if annotation[0, 4] < 0:
                 annotation[0, 14] = -1
             else:
                 annotation[0, 14] = 1
@@ -73,11 +73,11 @@ class FaceDataset(data.Dataset):
         if self.preproc is not None:
             img, target = self.preproc(img, target)
         boxes = target[:, :4]
-        labels = target[:, -1]
+        labels_image = target[:, -1]
         landms = target[:, 4:14]
         if self.target_transform:
-            boxes, landms, labels = self.target_transform(boxes, landms, labels)
-        return torch.from_numpy(img), boxes, landms, labels
+            boxes, landms, labels_image = self.target_transform(boxes, landms, labels_image)
+        return torch.from_numpy(img), boxes, landms, labels_image
 
     @staticmethod
     def read_file(root_path, file_name):
@@ -126,6 +126,8 @@ def detection_collate(batch):
         #     elif isinstance(tup, type(np.empty(0))):
         #         annos = torch.from_numpy(tup).float()
         #         targets.append(annos)
+        if isinstance(sample, np.ndarray):
+            continue
         imgs.append(sample[0])
         boxes.append(sample[1])
         landms.append(sample[2])
@@ -222,11 +224,11 @@ class ImgAugTransform:
 if __name__ == "__main__":
     from datasets.data_augment import preproc
 
-    loader = FaceDataset(root_path=os.path.join('/home/can/AI_Camera/EfficientFaceNet/data/widerface/train/images'),
-                         file_name='label.txt',
+    loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
+                         file_name='label_remake.txt',
                          preproc=preproc(300, (127, 127, 127)))
     print(len(loader))
     for i in range(0, len(loader)):
-        print("\n****")
+        # print("\n****")
         # print(i)
         a = loader.__getitem__(i)
