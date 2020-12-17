@@ -200,7 +200,7 @@ def _pad_to_square(image, rgb_mean, pad_image_flag):
     height, width, _ = image.shape
     long_side = max(width, height)
     image_t = np.empty((long_side, long_side, 3), dtype=image.dtype)
-    image_t[:, :] = rgb_mean
+    image_t[:, :] = np.array(rgb_mean, dtype=np.float32)
     #image_t[:, :] /= 128.0
     image_t[0:0 + height, 0:0 + width] = image
     return image_t
@@ -211,7 +211,7 @@ def _resize_subtract_mean(image, insize, rgb_mean):
     interp_method = interp_methods[random.randrange(5)]
     image = cv2.resize(image, (insize, insize), interpolation=interp_method)
     image = image.astype(np.float32)
-    image -= rgb_mean
+    image -= np.array(rgb_mean, dtype=np.float32)
     image /= 128.0
     return image.transpose(2, 0, 1)
 

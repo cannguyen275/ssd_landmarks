@@ -223,10 +223,15 @@ class ImgAugTransform:
 
 if __name__ == "__main__":
     from datasets.data_augment import preproc
+    from module.ssd import MatchPrior
+    from model.config import mb_ssd_lite_f38_config
 
-    loader = FaceDataset(root_path=os.path.join('/media/quannm/DATAQUAN/WiderFace/widerface/train/images'),
+    config = mb_ssd_lite_f38_config
+    target_transform = MatchPrior(config.priors, config.center_variance, config.size_variance, config.iou_threshold)
+    loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
                          file_name='label_remake.txt',
-                         preproc=preproc(300, (127, 127, 127)))
+                         preproc=preproc(500, (127, 127, 127)),
+                         target_transform=target_transform)
     print(len(loader))
     for i in range(0, len(loader)):
         # print("\n****")

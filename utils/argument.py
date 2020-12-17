@@ -53,7 +53,7 @@ def _argument():
                         help="Scheduler for SGD. It can one of multi-step and cosine")
 
     # Params for Multi-step Scheduler
-    parser.add_argument('--milestones', default="80,100", type=str,
+    parser.add_argument('--milestones', default="40, 80, 120", type=str,
                         help="milestones for MultiStepLR")
 
     # Params for Cosine Annealingmodels/mb2-ssd-lite-epoch-8-train_loss-2.88-val_loss-2.6.pth
@@ -61,11 +61,11 @@ def _argument():
                         help='T_max value for Cosine Annealing Scheduler.')
 
     # Train params
-    parser.add_argument('--batch_size', default=32, type=int,
+    parser.add_argument('--batch_size', default=64, type=int,
                         help='Batch size for training')
     parser.add_argument('--num_epochs', default=500, type=int,
                         help='the number epochs')
-    parser.add_argument('--num_workers', default=4, type=int,
+    parser.add_argument('--num_workers', default=6, type=int,
                         help='Number of workers used in dataloading')
     parser.add_argument('--validation_epochs', default=1, type=int,
                         help='the number epochs')

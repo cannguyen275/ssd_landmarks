@@ -14,6 +14,7 @@ from datasets.wider_face import FaceDataset, detection_collate
 from utils.misc import Timer, freeze_net_layers
 from utils.argument import _argument
 from torch.utils.tensorboard import SummaryWriter
+
 timer = Timer()
 
 args = _argument()
@@ -33,14 +34,14 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
         boxes = boxes.to(device)
         labels = labels.to(device)
         landmarks_gt = landmarks_gt.to(device)
-        learning_rate=optimizer.param_groups[0]['lr']
+        learning_rate = optimizer.param_groups[0]['lr']
         optimizer.zero_grad()
-        
+
         confidence, locations, landmarks = net(images)
         regression_loss, classification_loss, landmark_loss = criterion(confidence, locations, landmarks, labels, boxes,
                                                                         landmarks_gt)
-        
-        loss = 2* regression_loss + classification_loss + landmark_loss
+
+        loss = 2 * regression_loss + classification_loss + landmark_loss
         loss.backward()
         optimizer.step()
 
@@ -58,7 +59,8 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
                 f"train_avg_loss: {avg_loss:.4f}, " +
                 f"train_reg_loss: {avg_reg_loss:.4f}, " +
                 f"train_cls_loss: {avg_clf_loss:.4f}, " +
-                f"train_lmd_loss: {avg_lmd_loss:.4f}, "
+                f"train_lmd_loss: {avg_lmd_loss:.4f}, " +
+                f"Learning Rate: {learning_rate:.4f}, "
             )
             running_loss = 0.0
             running_regression_loss = 0.0
@@ -66,7 +68,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
             running_landmark_loss = 0.0
             training_loss = avg_loss
 
-    return training_loss ,avg_reg_loss, avg_clf_loss , avg_lmd_loss, learning_rate
+    return training_loss, avg_reg_loss, avg_clf_loss, avg_lmd_loss, learning_rate
 
 
 def test(loader, net, criterion, device):
@@ -103,13 +105,13 @@ def data_loader(config):
 
     logging.info("Prepare training datasets.")
 
-    loader = FaceDataset(root_path=os.path.join('/media/quannm/DATAQUAN/WiderFace/widerface/train/images'),
-                         file_name='label_remake.txt',
+    loader = FaceDataset(root_path=os.path.join('/media/can/Data/Dataset/WiderFace/widerface/train/images'),
+                         file_name='label.txt',
                          preproc=preproc(300, (127, 127, 127)),
                          target_transform=target_transform)
     logging.info("Train dataset size: {}".format(len(loader)))
     train_loader = DataLoader(loader, args.batch_size, num_workers=args.num_workers, shuffle=True,
-                              collate_fn=detection_collate)
+                              collate_fn=detection_collate, pin_memory=True)
     if args.valid:
         # TODO: add validation dataset
         pass

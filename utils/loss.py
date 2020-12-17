@@ -57,6 +57,8 @@ class FocalLoss(nn.Module):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
+        self.neg_pos_ratio = 7
+        self.use_CrossEntropy = False
 
     def forward(self, conf_preds, loc_preds, land_preds, conf_targets, loc_targets, land_targets, ):
         """
@@ -74,7 +76,7 @@ class FocalLoss(nn.Module):
         # landm Loss (Smooth L1)
         # Shape: [batch,num_priors,10]
         ############# Landmark Loss part ##############
-        #zeros = torch.tensor(0).cuda()
+        # zeros = torch.tensor(0).cuda()
         pos_land = conf_targets > 0  # ignore background and images without landmark 
         num_pos_landm = pos_land.long().sum(1, keepdim=True)
         N1 = max(num_pos_landm.data.sum().float(), 1)
@@ -95,15 +97,25 @@ class FocalLoss(nn.Module):
         loc_loss = F.smooth_l1_loss(loc_p, loc_t, reduction='sum')
 
         ############### Confidence Loss part ###############
-        # focal loss implementation(2)
-        pos_cls = conf_targets > -1
-        mask = pos_cls.unsqueeze(2).expand_as(conf_preds)
-        conf_p = conf_preds[mask].view(-1, conf_preds.size(2)).clone()
-        p_t_log = -F.cross_entropy(conf_p, conf_targets[pos_cls].type(torch.long), reduction='sum')
-        p_t = torch.exp(p_t_log)
+        if not self.use_CrossEntropy:
+            # focal loss implementation(2)
+            pos_cls = conf_targets > -1
+            mask = pos_cls.unsqueeze(2).expand_as(conf_preds)
+            conf_p = conf_preds[mask].view(-1, conf_preds.size(2)).clone()
+            p_t_log = -F.cross_entropy(conf_p, conf_targets[pos_cls].type(torch.long), reduction='sum')
+            p_t = torch.exp(p_t_log)
 
-        # This is focal loss presented in the paper eq(5)
-        conf_loss = -self.alpha * ((1 - p_t) ** self.gamma * p_t_log)
+            # This is focal loss presented in the paper eq(5)
+            conf_loss = -self.alpha * ((1 - p_t) ** self.gamma * p_t_log)
+        else:
+            num_classes = conf_preds.size(2)
+            with torch.no_grad():
+                # derived from cross_entropy=sum(log(p))
+                loss = -F.log_softmax(conf_preds, dim=2)[:, :, 0]
+                mask = box_utils.hard_negative_mining(loss, conf_targets, self.neg_pos_ratio)
+
+            confidence = conf_preds[mask, :]
+            conf_loss = F.cross_entropy(confidence.reshape(-1, num_classes), conf_targets[mask].type(torch.long), size_average=False)
 
         num_pos = pos.long().sum(1, keepdim=True)
 

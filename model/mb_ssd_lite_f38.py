@@ -6,7 +6,7 @@ from module.ssd import SSD, GraphPath
 from utils.predictor import Predictor
 from utils.argument import _argument
 from model.config import mb_ssd_lite_f38_config as config
-#from torchscope import scope
+from torchscope import scope
 
 
 def SeperableConv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, onnx_compatible=True):
