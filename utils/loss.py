@@ -115,7 +115,8 @@ class FocalLoss(nn.Module):
                 mask = box_utils.hard_negative_mining(loss, conf_targets, self.neg_pos_ratio)
 
             confidence = conf_preds[mask, :]
-            conf_loss = F.cross_entropy(confidence.reshape(-1, num_classes), conf_targets[mask].type(torch.long), size_average=False)
+            conf_loss = F.cross_entropy(confidence.reshape(-1, num_classes), conf_targets[mask].type(torch.long),
+                                        size_average=False)
 
         num_pos = pos.long().sum(1, keepdim=True)
 

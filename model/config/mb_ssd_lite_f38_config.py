@@ -40,7 +40,7 @@ def generate_ssd_priors(specs: List[SSDSpec], image_size, clamp=True) -> torch.T
                     x_center,
                     y_center,
                     w,
-                    h * ratio
+                    h,  # h * ratio
                 ])
                 # big sized square box
                 size = math.sqrt(spec.box_sizes.max * spec.box_sizes.min)
@@ -49,7 +49,7 @@ def generate_ssd_priors(specs: List[SSDSpec], image_size, clamp=True) -> torch.T
                     x_center,
                     y_center,
                     w,
-                    h * ratio
+                    h,  # h * ratio
                 ])
 
     priors = torch.tensor(priors)

@@ -5,6 +5,7 @@ import logging
 import sys
 import itertools
 import torch
+
 sys.path.append('/home/quannm/github/ssd_landmarks/')
 # from torchscope import scope
 # from torchsummary import summary
@@ -22,6 +23,7 @@ from model.config import rfb_tiny_mb_ssd_config
 from utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 from torch.utils.tensorboard import SummaryWriter
+
 
 # sys.path.append('/home/quannm/ssd_landmarks/')
 
@@ -72,8 +74,12 @@ class Train():
         writer = SummaryWriter()
         for epoch in range(0, self.args.num_epochs):
             self.scheduler.step()
-            training_loss ,avg_reg_loss, avg_clf_loss , avg_lmd_loss,learning_rate = train(self.train_loader, self.net, self.criterion, self.optimizer, device=self.device,
-                                  debug_steps=self.args.debug_steps, epoch=epoch)
+            training_loss, avg_reg_loss, avg_clf_loss, avg_lmd_loss, learning_rate = train(self.train_loader, self.net,
+                                                                                           self.criterion,
+                                                                                           self.optimizer,
+                                                                                           device=self.device,
+                                                                                           debug_steps=self.args.debug_steps,
+                                                                                           epoch=epoch)
             writer.add_scalar('model/regression_loss', avg_reg_loss, epoch)
             writer.add_scalar('model/classification_loss', avg_clf_loss, epoch)
             writer.add_scalar('model/landmark_loss', avg_lmd_loss, epoch)

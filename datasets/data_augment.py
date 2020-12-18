@@ -1,6 +1,9 @@
 import cv2
 import numpy as np
 import random
+from datasets.wider_face import ImgAugTransform
+
+
 # from utils.box_utils import matrix_iof
 
 
@@ -21,12 +24,12 @@ def _crop(image, boxes, labels, landm, img_dim):
     pad_image_flag = True
 
     for _ in range(250):
-        if random.uniform(0, 1) <= 0.3:
-            scale = 1.0
-        else:
-            scale = random.uniform(0.3, 1.0)
-        # PRE_SCALES = [0.3, 0.45, 0.6, 0.8, 1.0]
-        # scale = random.choice(PRE_SCALES)
+        # if random.uniform(0, 1) <= 0.3:
+        #     scale = 1.0
+        # else:
+        #     scale = random.uniform(0.3, 1.0)
+        PRE_SCALES = [0.3, 0.45, 0.6, 0.8, 1.0]
+        scale = random.choice(PRE_SCALES)
         short_side = min(width, height)
         w = int(scale * short_side)
         h = w
@@ -72,7 +75,7 @@ def _crop(image, boxes, labels, landm, img_dim):
         # make sure that the cropped image contains at least one face > 16 pixel at training image scale
         b_w_t = (boxes_t[:, 2] - boxes_t[:, 0] + 1) / w * img_dim
         b_h_t = (boxes_t[:, 3] - boxes_t[:, 1] + 1) / h * img_dim
-        mask_b = np.minimum(b_w_t, b_h_t) > 0.0
+        mask_b = np.minimum(b_w_t, b_h_t) > 12
         boxes_t = boxes_t[mask_b]
         labels_t = labels_t[mask_b]
         landms_t = landms_t[mask_b]
@@ -201,15 +204,17 @@ def _pad_to_square(image, rgb_mean, pad_image_flag):
     long_side = max(width, height)
     image_t = np.empty((long_side, long_side, 3), dtype=image.dtype)
     image_t[:, :] = np.array(rgb_mean, dtype=np.float32)
-    #image_t[:, :] /= 128.0
+    # image_t[:, :] /= 128.0
     image_t[0:0 + height, 0:0 + width] = image
     return image_t
 
 
-def _resize_subtract_mean(image, insize, rgb_mean):
+def _resize_subtract_mean(image, insize, rgb_mean, augment):
     interp_methods = [cv2.INTER_LINEAR, cv2.INTER_CUBIC, cv2.INTER_AREA, cv2.INTER_NEAREST, cv2.INTER_LANCZOS4]
     interp_method = interp_methods[random.randrange(5)]
     image = cv2.resize(image, (insize, insize), interpolation=interp_method)
+    image = augment(image)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = image.astype(np.float32)
     image -= np.array(rgb_mean, dtype=np.float32)
     image /= 128.0
@@ -221,6 +226,7 @@ class preproc(object):
     def __init__(self, img_dim, rgb_means):
         self.img_dim = img_dim
         self.rgb_means = rgb_means
+        self.augment = ImgAugTransform()
 
     def __call__(self, image, targets, debug=False):
         assert targets.shape[0] > 0, "this image does not have gt"
@@ -234,7 +240,7 @@ class preproc(object):
         image_t = _pad_to_square(image_t, self.rgb_means, pad_image_flag)
         image_t, boxes_t, landm_t = _mirror(image_t, boxes_t, landm_t)
         height, width, _ = image_t.shape
-        image_t = _resize_subtract_mean(image_t, self.img_dim, self.rgb_means)
+        image_t = _resize_subtract_mean(image_t, self.img_dim, self.rgb_means, self.augment)
         scale = image_t.shape[1] / height
         boxes_t *= scale
         landm_t *= scale
@@ -247,6 +253,7 @@ class preproc(object):
             img_debug += self.rgb_means
             img_debug *= 128.0
             img_debug = np.uint8(img_debug)
+            img_debug = cv2.cvtColor(img_debug, cv2.COLOR_RGB2BGR)
             cv2.imwrite("test_temp.jpg", img_debug)
             img_debug = cv2.imread('test_temp.jpg')
             print(len(boxes_t))
