@@ -331,7 +331,8 @@ def hard_nms(box_scores, landmark_scores, iou_threshold, top_k=-1, candidate_siz
             current_box.unsqueeze(0),
         )
         indexes = indexes[iou <= iou_threshold]
-
+    if landmark_scores is None:
+        return box_scores[picked, :], None
     return box_scores[picked, :], landmark_scores[picked, :]
 
 

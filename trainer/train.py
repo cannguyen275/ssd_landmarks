@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from utils.loss import FocalLoss
 import torch
 from datasets.data_augment import preproc
-from datasets.wider_face import FaceDataset, detection_collate
+from datasets.wider_face import FaceDataset, ValDataset, detection_collate, detection_collate_valid
 from utils.misc import Timer, freeze_net_layers
 from utils.argument import _argument
 from torch.utils.tensorboard import SummaryWriter
@@ -113,11 +113,14 @@ def data_loader(config):
     train_loader = DataLoader(loader, args.batch_size, num_workers=args.num_workers, shuffle=True,
                               collate_fn=detection_collate, pin_memory=True)
     if args.valid:
-        # TODO: add validation dataset
-        pass
+        valid_dataset = ValDataset(os.path.join("/media/can/Data/Dataset/WiderFace/widerface/val", "label.txt"))
+        valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False,
+                                                   num_workers=args.num_workers, collate_fn=detection_collate_valid,
+                                                   pin_memory=True)
+        return train_loader, valid_loader
 
     else:
-        return train_loader
+        return train_loader, None
 
 
 def create_network(create_net, device, num_classes=2):

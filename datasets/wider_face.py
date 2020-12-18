@@ -1,9 +1,12 @@
 import os
 import os.path
 import torch
-import torch.utils.data as data
 import cv2
 import numpy as np
+import skimage.transform
+import torch.nn.functional as F
+import torchvision.transforms as transforms
+import torch.utils.data as data
 from imgaug import augmenters as iaa
 
 
@@ -85,6 +88,89 @@ class FaceDataset(data.Dataset):
         return path_images, words
 
 
+class ValDataset(data.Dataset):
+    def __init__(self, txt_path, flip=False):
+        self.imgs_path = []
+        self.words = []
+        self.transform = transforms.Compose([
+            Resizer(),
+            PadToSquare(),
+            SubtractMeans(np.array([127, 127, 127])),
+            # lambda img, boxes=None, labels=None: (img / 128.0, boxes, labels),
+            lambda sample: {'img': (sample['img'] / 128.0), 'annot': sample['annot']},
+            ToTensor()
+        ])
+        self.flip = flip
+        self.batch_count = 0
+        self.img_size = 300
+
+        f = open(txt_path, 'r')
+        lines = f.readlines()
+        isFirst = True
+        labels = []
+        for line in lines:
+            line = line.rstrip()
+            if line.startswith('#'):
+                if isFirst is True:
+                    isFirst = False
+                else:
+                    labels_copy = labels.copy()
+                    self.words.append(labels_copy)
+                    labels.clear()
+                path = line[2:]
+                path = txt_path.replace('label.txt', 'images/') + path
+                self.imgs_path.append(path)
+            else:
+                line = line.split(' ')
+                label = [float(x) for x in line]
+                labels.append(label)
+
+        self.words.append(labels)
+
+    def __getitem__(self, index):
+        img = cv2.imread(self.imgs_path[index])
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        labels = self.words[index]
+        annotations = np.zeros((0, 4))
+        if len(labels) == 0:
+            return annotations
+        for idx, label in enumerate(labels):
+            annotation = np.zeros((1, 4))
+            # bbox
+            annotation[0, 0] = label[0]  # x1
+            annotation[0, 1] = label[1]  # y1
+            annotation[0, 2] = label[0] + label[2]  # x2
+            annotation[0, 3] = label[1] + label[3]  # y2
+
+            annotations = np.append(annotations, annotation, axis=0)
+
+        sample = {'img': img, 'annot': annotations}
+        if self.transform is not None:
+            sample = self.transform(sample)
+        return sample['img'], sample['annot']
+
+    def __len__(self):
+        return len(self.imgs_path)
+
+    def _load_annotations(self, index):
+        labels = self.words[index]
+        annotations = np.zeros((0, 4))
+
+        if len(labels) == 0:
+            return annotations
+
+        for idx, label in enumerate(labels):
+            annotation = np.zeros((1, 4))
+            annotation[0, 0] = label[0]  # x1
+            annotation[0, 1] = label[1]  # y1
+            annotation[0, 2] = label[0] + label[2]  # x2
+            annotation[0, 3] = label[1] + label[3]  # y2
+
+            annotations = np.append(annotations, annotation, axis=0)
+
+        return annotations
+
+
 def detection_collate(batch):
     """Custom collate fn for dealing with batches of images that have a different
     number of associated object annotations (bounding boxes).
@@ -116,6 +202,35 @@ def detection_collate(batch):
     return torch.stack(imgs, 0), torch.stack(boxes, 0), torch.stack(landms, 0), torch.stack(labels, 0)
 
 
+def detection_collate_valid(batch):
+    """Custom collate fn for dealing with batches of images that have a different
+    number of associated object annotations (bounding boxes).
+
+    Arguments:
+        batch: (tuple) A tuple of tensor images and lists of annotations
+
+    Return:
+        A tuple containing:
+            1) (tensor) batch of images stacked on their 0 dim
+            2) (list of tensors) annotations for a given image are stacked on 0 dim
+    """
+    targets = []
+    boxes, landms, labels = [], [], []
+    imgs = []
+    for _, sample in enumerate(batch):
+        # for _, tup in enumerate(sample):
+        #     if torch.is_tensor(tup):
+        #         imgs.append(tup)
+        #     elif isinstance(tup, type(np.empty(0))):
+        #         annos = torch.from_numpy(tup).float()
+        #         targets.append(annos)
+        if isinstance(sample, np.ndarray):
+            continue
+        imgs.append(sample[0])
+        boxes.append(sample[1])
+    return torch.stack(imgs, 0), boxes
+
+
 class ImgAugTransform:
     def __init__(self):
         self.aug = iaa.Sequential([
@@ -131,14 +246,14 @@ class ImgAugTransform:
             #                   iaa.Emboss(alpha=(0.0, 1.0), strength=(0.5, 1.5)),
             #                   iaa.EdgeDetect(alpha=(0.0, 1.0)),
             #                   iaa.DirectedEdgeDetect(alpha=(0.0, 1.0), direction=(0.0, 1.0)),
-                              # iaa.Canny(
-                              #     alpha=(0.0, 0.5),
-                              #     colorizer=iaa.RandomColorsBinaryImageColorizer(
-                              #         color_true=255,
-                              #         color_false=0
-                              #     )
-                              # )
-                          # ])),
+            # iaa.Canny(
+            #     alpha=(0.0, 0.5),
+            #     colorizer=iaa.RandomColorsBinaryImageColorizer(
+            #         color_true=255,
+            #         color_false=0
+            #     )
+            # )
+            # ])),
             iaa.Sometimes(0.2,
                           iaa.OneOf([
                               iaa.GammaContrast((0.5, 2.0)),
@@ -200,6 +315,85 @@ class ImgAugTransform:
     def __call__(self, img):
         img = np.array(img)
         return self.aug.augment_image(img)
+
+
+class Resizer(object):
+    def __call__(self, sample, input_size=300):
+        image, annots = sample['img'], sample['annot']
+
+        rows, cols, _ = image.shape
+        long_side = max(rows, cols)
+        scale = input_size / long_side
+
+        # resize image
+        resized_image = skimage.transform.resize(image, (
+            int(rows * input_size / long_side), int(cols * input_size / long_side)))
+        resized_image = resized_image * 255
+
+        assert (resized_image.shape[0] == input_size or resized_image.shape[
+            1] == input_size), 'resized image size not {}'.format(input_size)
+
+        if annots.shape[1] > 4:
+            annots = annots * scale
+        else:
+            annots[:, :4] = annots[:, :4] * scale
+
+        return {'img': resized_image, 'annot': annots}
+
+
+class PadToSquare(object):
+    def __call__(self, sample, input_size=300):
+        image, annots = sample['img'], sample['annot']
+        rows, cols, _ = image.shape
+        dim_diff = np.abs(rows - cols)
+
+        # relocate bbox annotations
+        if rows == input_size:
+            diff = input_size - cols
+            annots[:, 0] = annots[:, 0] + diff / 2
+            annots[:, 2] = annots[:, 2] + diff / 2
+        elif cols == input_size:
+            diff = input_size - rows
+            annots[:, 1] = annots[:, 1] + diff / 2
+            annots[:, 3] = annots[:, 3] + diff / 2
+        if annots.shape[1] > 4:
+            ldm_mask = annots[:, 4] > 0
+            if rows == input_size:
+                diff = input_size - cols
+                annots[ldm_mask, 4::2] = annots[ldm_mask, 4::2] + diff / 2
+            elif cols == input_size:
+                diff = input_size - rows
+                annots[ldm_mask, 5::2] = annots[ldm_mask, 5::2] + diff / 2
+
+        # pad image
+        img = torch.from_numpy(image)
+        img = img.permute(2, 0, 1)
+        pad1, pad2 = dim_diff // 2, dim_diff - dim_diff // 2
+        pad = (0, 0, pad1, pad2) if rows <= cols else (pad1, pad2, 0, 0)
+
+        padded_img = F.pad(img, pad, "constant", value=0)
+        padded_img = padded_img.permute(1, 2, 0)
+
+        annots = torch.from_numpy(annots)
+
+        return {'img': padded_img.numpy(), 'annot': annots}
+
+
+class SubtractMeans(object):
+    def __init__(self, mean):
+        self.mean = np.array(mean, dtype=np.float32)
+
+    def __call__(self, sample):
+        image, annots = sample['img'], sample['annot']
+        image = image.astype(np.float32)
+        image -= self.mean
+        return {'img': image.astype(np.float32), 'annot': annots}
+
+
+class ToTensor(object):
+    def __call__(self, sample):
+        image, annots = sample['img'], sample['annot']
+        return {'img': torch.from_numpy(image.astype(np.float32)).permute(2, 0, 1), 'annot': annots}
 
 
 if __name__ == "__main__":
